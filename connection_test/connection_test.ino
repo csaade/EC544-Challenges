@@ -23,7 +23,6 @@ double Thermistor(int RawADC) {
  Temp = log(10000.0*((1024.0/RawADC-1))); 
  Temp = 1 / (0.001129148 + (0.000234125 + (0.0000000876741 * Temp * Temp ))* Temp );
  Temp = Temp - 273.15;          
- Temp = (Temp * 9.0)/ 5.0 + 32.0; 
  return Temp;
 }
 
@@ -46,7 +45,7 @@ void loop()
   val=analogRead(0);      
   temp=(int) Thermistor(val); //Cast to int because arduino cant do doubles/floats
   memset(temp_string, 0, sizeof(char)*50); // sets all characters in string to 0
-  sprintf(temp_string, "Temp = %d F\n", temp);
+  sprintf(temp_string, "Temp2 = %d C\n", temp);
   //Serial.print(temp_string);
   int i = 0;
   for(i = 0; i < strlen(temp_string); i++)
