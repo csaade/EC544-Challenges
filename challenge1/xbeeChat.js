@@ -70,28 +70,29 @@ sp.on("open", function () {
     }
 
     /* If we have at least 5 values: start averaging */
-    if(acounter >= 5 && bcounter >=5 && ccounter >=5 && dcounter >=5) {
+    if(acounter >= 5 && bcounter >=5 /*&& ccounter >=5 && dcounter >=5*/) {
       var atotal = 0;
       var btotal = 0;
-      var ctotal = 0;
-      var dtotal = 0;
+      /*var ctotal = 0;
+      var dtotal = 0;*/
         
       for (var i = 0; i < 5; i++) {
         atotal += first_xb[i];
         btotal += second_xb[i];
-        ctotal += third_xb[i];
-        dtotal += fourth_xb[i];
+        /*ctotal += third_xb[i];
+        dtotal += fourth_xb[i];*/
       }
       
       first_xb = [];
+      acounter = 0;
       second_xb = [];
-      third_xb = [];
-      fourth_xb = [];
+      bcounter = 0;
+      /*third_xb = [];
+      fourth_xb = [];*/
         
-      var average = ((atotal / 5) + (btotal / 5) + (ctotal / 5) + (dtotal / 5)) / 4
+      var average = ((atotal / 5) + (btotal / 5) /*+ (ctotal / 5) + (dtotal / 5)*/) / 2/*4*/
       
-      console.log("We have a message");
-      io.emit("chat message", " The entire system has an average of: " + average.toString() + " C");
+      io.emit("chat message", average.toString() + " C");
       counter = 0;
     }
   
