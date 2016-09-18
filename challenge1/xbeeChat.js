@@ -37,6 +37,7 @@ var second_xb = [];
 var third_xb = [];
 var fourth_xb = [];
 
+/* Counter used until they are equal to 5 (since we average every 5 values) */
 var acounter = 0;
 var bcounter = 0;
 var ccounter = 0;
@@ -68,6 +69,7 @@ sp.on("open", function () {
       dcounter++;
     }
 
+    /* If we have at least 5 values: start averaging */
     if(acounter >= 5 && bcounter >=5 && ccounter >=5 && dcounter >=5) {
       var atotal = 0;
       var btotal = 0;
@@ -88,7 +90,7 @@ sp.on("open", function () {
         
       var average = ((atotal / 5) + (btotal / 5) + (ctotal / 5) + (dtotal / 5)) / 4
       
-      io.emit("chat message", xb_id + " has an average of: " + average.toString() + " C");
+      io.emit("chat message", " The entire system has an average of: " + average.toString() + " C");
       counter = 0;
     }
   
