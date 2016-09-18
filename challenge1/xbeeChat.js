@@ -69,36 +69,19 @@ sp.on("open", function () {
       dcounter++;
     }
 
-    /* If we have at least 5 values: start averaging */
-    if(acounter >= 5 && bcounter >=5 /*&& ccounter >=5 && dcounter >=5*/) {
-    	
-    /*acounter = 0;
-    bcounter = 0;
-    ccounter = 0;
-    dcounter = 0;*/
-
-      var atotal = 0;
-      var btotal = 0;
-      /*var ctotal = 0;
-      var dtotal = 0;*/
-        
-      for (var i = 0; i < 5; i++) {
-        atotal += first_xb[i];
-        btotal += second_xb[i];
-        /*ctotal += third_xb[i];
-        dtotal += fourth_xb[i];*/
-      }
+    /* If we have at least 1 values in each array: start averaging */
+    if(acounter >= 1 && bcounter >=1 && ccounter >=1 && dcounter >=1) {
       
       first_xb = [];
-      acounter = 0;
       second_xb = [];
+      third_xb = [];
+      fourth_xb = [];
+      acounter = 0;
       bcounter = 0;
-      /*third_xb = [];
-      fourth_xb = [];*/
+      ccounter = 0;
+      dcounter = 0;
         
-      var average = ((atotal / 5) + (btotal / 5) /*+ (ctotal / 5) + (dtotal / 5)*/) / 2/*4*/
-      
-
+      var average = (first_xb[0] + second_xb[0] + third_xb[0] + fourth_xb[0]) / 4
       io.emit("chat message", average.toString() + " C");
     }
   
