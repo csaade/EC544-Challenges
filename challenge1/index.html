@@ -21,7 +21,7 @@
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
     -->
-    <h1>Hey</h1>
+    <h1 id="message"></h1>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
@@ -36,7 +36,9 @@
         return false;
       });
       socket.on('chat message', function(msg){
+        alert('we got a msg');
         //$('#messages').append($('<li>').text(msg));
+        $('message').innerHTML = msg;
       });
     </script>
   </body>

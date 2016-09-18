@@ -90,6 +90,7 @@ sp.on("open", function () {
         
       var average = ((atotal / 5) + (btotal / 5) + (ctotal / 5) + (dtotal / 5)) / 4
       
+      console.log("We have a message");
       io.emit("chat message", " The entire system has an average of: " + average.toString() + " C");
       counter = 0;
     }
