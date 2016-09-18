@@ -96,7 +96,7 @@ sp.on("open", function () {
         
       var average = ((atotal / 5) + (btotal / 5) + (ctotal / 5) + (dtotal / 5)) / 4
       
-      io.emit("chat message", " The entire system has an average of: " + average.toString() + " C");
+      io.emit(average.toString() + " C");
     }
   
   });
