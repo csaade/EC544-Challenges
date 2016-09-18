@@ -54,7 +54,7 @@ void loop()
        // doubles/floats          
 
   memset(temp_string, 0, sizeof(char)*TEMP_STRING_LENGTH); // sets all characters in string to 0
-  sprintf(temp_string, "Temp2 = %d C\n", temp); // Create the formatted string
+  sprintf(temp_string, "2:%d\n", temp); // Create the formatted string
     //Serial.print(temp_string);
     //int i = 0;
     //for(i = 0; i < strlen(temp_string); i++)
