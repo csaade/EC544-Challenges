@@ -30,7 +30,14 @@ http.listen(3000, function(){
 });
 
 var first_xb = [];
-var counter = 0;
+var second_xb = [];
+var third_xb = [];
+var fourth_xb = [];
+
+var acounter = 0;
+var bcounter = 0;
+var ccounter = 0;
+var dcounter = 0;
 
 sp.on("open", function () {
   console.log('open');
@@ -43,15 +50,41 @@ sp.on("open", function () {
 
     if(xb_id == "1") {
       first_xb.push(parseInt(xb_temperature,10));
-      counter++;
+      acounter++;
+    }
+    if(xb_id == "2") {
+      second_xb.push(parseInt(xb_temperature,10));
+      bcounter++;
+    }
+    if(xb_id == "3") {
+      third_xb.push(parseInt(xb_temperature,10));
+      ccounter++;
+    }
+    if(xb_id == "4") {
+      fourth_xb.push(parseInt(xb_temperature,10));
+      dcounter++;
     }
 
-    if(counter == 5) {
-      var total = 0;
-      for (var i = 0; i < xb_temperature.length; i++) {
-        total += xb_temperature[i];
+    if(acounter >= 5 && bcounter >=5 && ccounter >=5 && dcounter >=5) {
+      var atotal = 0;
+      var btotal = 0;
+      var ctotal = 0;
+      var dtotal = 0;
+        
+      for (var i = 0; i < 5; i++) {
+        atotal += first_xb[i];
+        btotal += second_xb[i];
+        ctotal += third_xb[i];
+        dtotal += fourth_xb[i];
       }
-      var average = total/xb_temperature.length;
+      
+      first_xb = [];
+      second_xb = [];
+      third_xb = [];
+      fourth_xb = [];
+        
+      var average = ((atotal / 5) + (btotal / 5) + (ctotal / 5) + (dtotal / 5)) / 4
+      
       io.emit("chat message", xb_id + " has an average of: " + average.toString() + " C");
       counter = 0;
     }
