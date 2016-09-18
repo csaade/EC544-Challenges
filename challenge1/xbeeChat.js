@@ -1,54 +1,89 @@
-<!doctype html>
-<html>
-  <head>
-    <title>Socket.IO chat</title>
-    <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; background: url("./static/background.png") no-repeat;
-      background-size: 85%;}
-      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
-      #message {
-        position: absolute;
-        top: 60%;
-        left: 40%;
-        font-size: 60px;
-        font-weight: lighter;
-      }
-      /*
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages li { padding: 5px 10px; }
-      #messages li:nth-child(odd) { background: #eee; }
-      */
-    </style>
-  </head>
-  <body>
-    <!--<ul id="messages"></ul>
-    <form action="">
-      <input id="m" autocomplete="off" /><button>Send</button>
-    </form>
-    -->
-    <h1 id="message"></h1>
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-      var socket = io();
-    </script>
-    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
-    <script>
-      var socket = io();
-      $('form').submit(function(){
-        socket.emit('chat message', $('#m').val());
-        $('#m').val('');
-        return false;
-      });
-      socket.on('chat message', function(msg){
-        //alert('we got a msg');
-        //$('#messages').append($('<li>').text(msg));
-        //$('#message').innerHTML = text(msg);
-        $('#message').text(msg);
-      });
-    </script>
-  </body>
-</html>
+var SerialPort = require("serialport");
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
+
+var portName = process.argv[2],
+portConfig = {
+	baudRate: 9600,
+	parser: SerialPort.parsers.readline("\n")
+};
+var sp;
+sp = new SerialPort.SerialPort(portName, portConfig);
+
+app.get('/', function(req, res){
+  res.sendfile('index.html');
+});
+
+app.use(express.static(__dirname + '/static'));
+
+io.on('connection', function(socket){
+  console.log('a user connected');
+  socket.on('disconnect', function(){
+  });
+  socket.on('chat message', function(msg){
+    io.emit('chat message', msg);
+    sp.write(msg + "\n");
+  });
+});
+
+http.listen(3000, function(){
+  console.log('listening on *:3000');
+});
+
+var first_xb = [];
+var second_xb = [];
+var third_xb = [];
+var fourth_xb = [];
+
+/* Counter used until they are equal to 5 (since we average every 5 values) */
+var acounter = 0;
+var bcounter = 0;
+var ccounter = 0;
+var dcounter = 0;
+
+sp.on("open", function () {
+  console.log('open');
+  sp.on('data', function(data) {
+    console.log('data received: ' + data);
+
+    //Parse it here
+    var xb_id = data.split(":")[0];
+    var xb_temperature = data.split(":")[1];
+
+    if(xb_id == "1") {
+      first_xb.push(parseInt(xb_temperature,10));
+      acounter++;
+    }
+    if(xb_id == "2") {
+      second_xb.push(parseInt(xb_temperature,10));
+      bcounter++;
+    }
+    if(xb_id == "3") {
+      third_xb.push(parseInt(xb_temperature,10));
+      ccounter++;
+    }
+    if(xb_id == "4") {
+      fourth_xb.push(parseInt(xb_temperature,10));
+      dcounter++;
+    }
+
+    /* If we have at least 1 values in each array: start averaging */
+    if(acounter >= 1 && bcounter >=1 && ccounter >=1 && dcounter >=1) {
+      
+      first_xb = [];
+      second_xb = [];
+      third_xb = [];
+      fourth_xb = [];
+      acounter = 0;
+      bcounter = 0;
+      ccounter = 0;
+      dcounter = 0;
+        
+      var average = (first_xb[0] + second_xb[0] + third_xb[0] + fourth_xb[0]) / 4
+      io.emit("chat message", average.toString() + " C");
+    }
+  
+  });
+});
