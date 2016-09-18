@@ -26,11 +26,14 @@ double Thermistor(int RawADC) {
  return Temp;
 }
 
+#define TEMP_STRING_LENGTH 50
 char *temp_string;
 
 void setup()
 {
-  temp_string = (char *) malloc(50*sizeof(char));
+  // This string is used for transmitting the temperature to the coordinator
+  temp_string = (char *) malloc(TEMP_STRING_LENGTH*sizeof(char));
+
   // Set up both ports at 9600 baud. This value is most important
   // for the XBee. Make sure the baud rate matches the config
   // setting of your XBee.
@@ -41,15 +44,21 @@ void setup()
 void loop()
 {
   int val;                
-  int temp;
-  val=analogRead(0);      
-  temp=(int) Thermistor(val); //Cast to int because arduino cant do doubles/floats
-  memset(temp_string, 0, sizeof(char)*50); // sets all characters in string to 0
-  sprintf(temp_string, "Temp2 = %d C\n", temp);
-  //Serial.print(temp_string);
-  int i = 0;
-  for(i = 0; i < strlen(temp_string); i++)
-    XBee.write(temp_string[i]);
-  delay(2000);            
+  int temp; // temperature in celsius
+
+  val=analogRead(0); // Get a raw reading from the analog input pin
+  temp=(int) Thermistor(val); // Use formula to convert reading into temperature
+       // Also need to convert into int because Arduino's sprintf() cannot print
+       // doubles/floats          
+
+  memset(temp_string, 0, sizeof(char)*TEMP_STRING_LENGTH); // sets all characters in string to 0
+  sprintf(temp_string, "Temp2 = %d C\n", temp); // Create the formatted string
+    //Serial.print(temp_string);
+    //int i = 0;
+    //for(i = 0; i < strlen(temp_string); i++)
+    //  XBee.write(temp_string[i]);
+  XBee.write(temp_string); // Send the string to the XBee, which sends it to the coordinator
+
+  delay(2000); // Wait 2 seconds
 }
 
