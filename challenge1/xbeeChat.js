@@ -71,6 +71,12 @@ sp.on("open", function () {
 
     /* If we have at least 5 values: start averaging */
     if(acounter >= 5 && bcounter >=5 /*&& ccounter >=5 && dcounter >=5*/) {
+    	
+      var acounter = 0;
+      var bcounter = 0;
+      var ccounter = 0;
+      var dcounter = 0;
+
       var atotal = 0;
       var btotal = 0;
       /*var ctotal = 0;
@@ -93,7 +99,6 @@ sp.on("open", function () {
       var average = ((atotal / 5) + (btotal / 5) /*+ (ctotal / 5) + (dtotal / 5)*/) / 2/*4*/
       
       io.emit("chat message", average.toString() + " C");
-      counter = 0;
     }
   
   });
