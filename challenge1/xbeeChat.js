@@ -72,10 +72,6 @@ sp.on("open", function () {
     /* If we have at least 1 values in each array: start averaging */
     if(acounter >= 1 && bcounter >=1 && ccounter >=1 && dcounter >=1) {
       
-      first_xb = [];
-      second_xb = [];
-      third_xb = [];
-      fourth_xb = [];
       acounter = 0;
       bcounter = 0;
       ccounter = 0;
@@ -83,6 +79,10 @@ sp.on("open", function () {
         
       var average = (first_xb[0] + second_xb[0] + third_xb[0] + fourth_xb[0]) / 4
       io.emit("chat message", average.toString() + " C");
+      first_xb = [];
+      second_xb = [];
+      third_xb = [];
+      fourth_xb = [];
     }
   
   });

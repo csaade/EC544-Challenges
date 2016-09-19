@@ -4,15 +4,15 @@
     <title>Socket.IO chat</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { font: 13px Helvetica, Arial; background: url("./static/background.png") no-repeat;
+      body { font: 13px Helvetica, Arial; background: url("/background.png") no-repeat;
       background-size: 85%;}
       form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
       form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
       form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
       #message {
         position: absolute;
-        top: 60%;
-        left: 40%;
+        top: 53%;
+        left: 37%;
         font-size: 60px;
         font-weight: lighter;
       }
@@ -29,7 +29,7 @@
       <input id="m" autocomplete="off" /><button>Send</button>
     </form>
     -->
-    <h1 id="message"></h1>
+    <h1 id="message">...</h1>
     <script src="/socket.io/socket.io.js"></script>
     <script>
       var socket = io();
