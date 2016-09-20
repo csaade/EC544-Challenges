@@ -45,7 +45,7 @@ void loop()
   val=analogRead(0);      
   temp=(int) Thermistor(val); //Cast to int because arduino cant do doubles/floats
   memset(temp_string, 0, sizeof(char)*50); // sets all characters in string to 0
-  sprintf(temp_string, "2:%d\n", temp);
+  sprintf(temp_string, "3:%d\n", temp);
   Serial.print(temp_string);
   XBee.write(temp_string);
   delay(2000);            
