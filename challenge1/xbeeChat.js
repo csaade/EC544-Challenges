@@ -32,58 +32,54 @@ http.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
-var first_xb = [];
-var second_xb = [];
-var third_xb = [];
-var fourth_xb = [];
-
-/* Counter used until they are equal to 5 (since we average every 5 values) */
-var acounter = 0;
-var bcounter = 0;
-var ccounter = 0;
-var dcounter = 0;
+var temperatures = [];
+var idUtilization = [];
+var counter = 0;
 
 sp.on("open", function () {
   console.log('open');
   sp.on('data', function(data) {
-    console.log('data received: ' + data);
+    //console.log('data received: ' + data);
+    counter++;
+    if(!(counter % 10)) {
+      console.log("REFESH");
+      for(key in idUtilization)
+        idUtilization[key] = 0;
+    }
 
+    for(key in idUtilization)
+      console.log("key: " + key + " value: " + idUtilization[key]);
+
+    if(!(counter %30)) {
+      for(key in idUtilization) {
+        if(idUtilization[key] == 0) {
+          delete idUtilization[key];
+          delete temperatures[key];
+        }
+      }
+    }
     //Parse it here
     var xb_id = data.split(":")[0];
     var xb_temperature = data.split(":")[1];
 
-    if(xb_id == "1") {
-      first_xb.push(parseInt(xb_temperature,10));
-      acounter++;
-    }
-    if(xb_id == "2") {
-      second_xb.push(parseInt(xb_temperature,10));
-      bcounter++;
-    }
-    if(xb_id == "3") {
-      third_xb.push(parseInt(xb_temperature,10));
-      ccounter++;
-    }
-    if(xb_id == "4") {
-      fourth_xb.push(parseInt(xb_temperature,10));
-      dcounter++;
-    }
+    temperatures[xb_id] = parseInt(xb_temperature);
+    if(xb_id in idUtilization)
+      idUtilization[xb_id]++;
+    else
+      idUtilization[xb_id] = 1;
 
-    /* If we have at least 1 values in each array: start averaging */
-    if(acounter >= 1 && bcounter >=1 && ccounter >=1 && dcounter >=1) {
-      
-      acounter = 0;
-      bcounter = 0;
-      ccounter = 0;
-      dcounter = 0;
-        
-      var average = (first_xb[0] + second_xb[0] + third_xb[0] + fourth_xb[0]) / 4
-      io.emit("chat message", average.toString() + " C");
-      first_xb = [];
-      second_xb = [];
-      third_xb = [];
-      fourth_xb = [];
-    }
+    
+
+    var total = 0;
+    var length = 0;
+    for (var key in temperatures) {
+      total += temperatures[key];
+      length++;
+    };
+
+    var average = parseInt(total/length);
+    console.log("numDevices: " + Object.keys(temperatures).length);
+    io.emit("chat message", average.toString()+ " C");
   
   });
 });
