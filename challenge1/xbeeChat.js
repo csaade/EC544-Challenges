@@ -42,13 +42,13 @@ sp.on("open", function () {
     //console.log('data received: ' + data);
     counter++;
     if(!(counter % 10)) {
-      console.log("REFESH");
+      console.log("REFRESH");
       for(key in idUtilization)
         idUtilization[key] = 0;
     }
 
     for(key in idUtilization)
-      console.log("key: " + key + " value: " + idUtilization[key]);
+      console.log("Xbee ID: " + key + " Temp: " + temperatures[key]);
 
     if(!(counter %30)) {
       for(key in idUtilization) {
@@ -78,7 +78,7 @@ sp.on("open", function () {
     };
 
     var average = parseInt(total/length);
-    console.log("numDevices: " + Object.keys(temperatures).length);
+    //console.log("numDevices: " + Object.keys(temperatures).length);
     io.emit("chat message", average.toString()+ " C");
   
   });
