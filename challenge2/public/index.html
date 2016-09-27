@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Challenge 2 - Group 10</title>
+
+    <link href="/c3.css" rel="stylesheet" type="text/css">
+    <script src="/d3.min.js" charset="utf-8"></script>
+    <script src="/c3.min.js"></script>
+    <script src="/jquery-3.1.1.min.js"></script>
+  </head>
+  <body>
+    <input type="button" value="New Point" onclick="addNewPoint();"></input>
+    <div id="tempChart" width="900px" height="500px">
+    </div>
+    <script>
+      var d = {
+        columns: [
+          ['Xbee 1', 50, 52, 56, 53, 60],
+          ['Xbee 2', 60, 64, 63, 67, 59]
+        ]
+      };
+
+      var chart = c3.generate({
+        bindto: '#tempChart',
+        data: d,
+        axis: {
+          x: {
+            label: {text: 'Time',}
+          },
+          y: {
+            label: {text: 'Temperature'}
+          }
+        }
+      });
+
+      function addNewPoint()
+      {
+        d.columns[0].push(40);
+        chart.load(d);
+      }
+    </script>
+  </body>
+</html>
