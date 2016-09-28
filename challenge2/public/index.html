@@ -2,42 +2,76 @@
 <html>
   <head>
     <title>Challenge 2 - Group 10</title>
-
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
     <link href="/c3.css" rel="stylesheet" type="text/css">
     <script src="/d3.min.js" charset="utf-8"></script>
     <script src="/c3.min.js"></script>
     <script src="/jquery-3.1.1.min.js"></script>
   </head>
   <body>
-    <input type="button" value="New Point" onclick="addNewPoint();"></input>
+
+    <!-- We can insert here the different buttons we will use to change the charts -->
+    <input type="button" value="We don't need this for now :)" onclick="addNewPoint();"></input>
+
     <div id="tempChart" width="900px" height="500px">
     </div>
     <script>
-      var d = {
-        columns: [
-          ['Xbee 1', 50, 52, 56, 53, 60],
-          ['Xbee 2', 60, 64, 63, 67, 59]
-        ]
+      
+      /***** DRAWS CHART DURING LOAD TIME *****/
+      google.charts.load('current', {packages:['corechart']});
+      google.charts.setOnLoadCallback(drawChart); // calls drawChart method
+      
+      /***** VARIABLES THAT CONTROLS CHART *****/
+      var chart = null; // this is the chart object
+      var data = null; // array representing the values inside the chart
+
+      /***** OPTIONS FOR CHART (Axis & titles ...) *****/
+      var options = {
+        title: 'XBee Temperatures',
+        height: 500,
+        animation: { duration: 700, easing: 'out' },
+        hAxis: {
+          title: 'Time',
+        },
+        vAxis: {
+          title: 'Temperature',
+        }
       };
 
-      var chart = c3.generate({
-        bindto: '#tempChart',
-        data: d,
-        axis: {
-          x: {
-            label: {text: 'Time',}
-          },
-          y: {
-            label: {text: 'Temperature'}
-          }
-        }
-      });
+      /***** CALLED AFTER PAGE IS LOADED TO DRAW INITIAL STATE OF GRAPH *****/
+      // NOTE: MIGHT NOT BE NEEDING THIS ONE TO ADD ROWS TO DATA
+      // WE CAN ADD ROWS TO DATA DIRECTLY INSIDE SOCKET.ON
+      function drawChart() {
+        data = new google.visualization.DataTable();
+        data.addColumn('number', 'Time');
+        data.addColumn('number', 'Xbee 1');
+        data.addColumn('number', 'Xbee 2');
+        data.addColumn('number', 'Xbee 3');
+        data.addRows([
+          [1, 40,50,51],
+          [2, 50,50,51],
+          [3, 67,69,54]
+        ]);
 
-      function addNewPoint()
-      {
-        d.columns[0].push(40);
-        chart.load(d);
+        chart = new google.visualization.LineChart(document.getElementById('tempChart'));
+        chart.draw(data, options);
       }
+
+      /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
+      var socket = io();
+      socket.on('DB Value', function(msg) {
+        // Parsing value into integers
+        var XbeeID, temp, time;
+        XbeeID = parseInt(msg.split(':')[0]);
+        temp = parseInt(msg.split(':')[1]);
+        time = parseInt(msg.split(':')[2]);
+
+        // TODO: Add these values to the graph
+
+        // TODO: call this function to update the chart afterwards
+        //chart.draw(data, options);
+
+      });
     </script>
   </body>
 </html>

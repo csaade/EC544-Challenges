@@ -58,7 +58,7 @@ var realtimeGraph = function(callback){
 				/*** LOOPS THROUGH ALL DOCUMENTS INSIDE THIS DATAPOINT ***/
 				db.collection(name).find().skip(db.collection(name).count() - 1).forEach(function(docs) {
 
-					io.emit(name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
+					io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
 					console.log("id: " + name + " temp: " + docs.temp + " time: " + docs.time); //debug (can be removed)
 				});
 			});
