@@ -6,7 +6,8 @@
     <!-- <link href="/c3.css" rel="stylesheet" type="text/css"> -->
     <!-- <script src="/d3.min.js" charset="utf-8"></script> -->
     <!-- <script src="/c3.min.js"></script> -->
-    <script src="/jquery-3.1.1.min.js"></script>
+    <!-- <script src="/jquery-3.1.1.min.js"></script> -->
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
     <script type="text/javascript" src="/canvasjs.min.js"></script>
   </head>
@@ -19,7 +20,7 @@
     </div>
     <script>
       
-      
+    
     var chartTitle = "Real Time Temperature Readings";
     var names = [];
     var sensorData = {}; 
@@ -114,7 +115,7 @@
     var refreshChart = function(){
       renderChart(sensorData);
     }
-
+    
           /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
           var socket = io();
           socket.on('DB Value', function(msg) {

@@ -71,7 +71,7 @@ var realtimeGraph = function(callback){
 
 	
 }
-
+/*
 var sp;
 sp = new serialport.SerialPort(portName, portConfig);
 
@@ -94,7 +94,7 @@ sp.on("open", function() {
 	});
 
 	
-});
+});*/
 
 
 // Return the html page and other web things
