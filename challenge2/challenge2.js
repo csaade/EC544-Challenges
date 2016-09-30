@@ -43,31 +43,31 @@ var realtimeGraph = function(callback){
 	graph_msg = [];
 
 	/*** CONNECTION TO DB ***/
-	mongo.connect(url, function(err, db) {
-		assert.equal(null, err);
-		console.log('Connected to mongodb server'); //debug (remove this later)
+	// mongo.connect(url, function(err, db) {
+	// 	assert.equal(null, err);
+	// 	console.log('Connected to mongodb server'); //debug (remove this later)
 		
-		/*** LOOPING THROUGH ALL COLLECTIONS INSIDE DB ***/
-		//Note: every data coming from an Xbee has its own collection in the DB
-		db.collections(function(e, cols) {
-			cols.forEach(function(col) {
+	// 	/*** LOOPING THROUGH ALL COLLECTIONS INSIDE DB ***/
+	// 	//Note: every data coming from an Xbee has its own collection in the DB
+	// 	db.collections(function(e, cols) {
+	// 		cols.forEach(function(col) {
 
-				var name = col.collectionName; //get XbeeID
+	// 			var name = col.collectionName; //get XbeeID
 
-				/*** FINDS LAST DATA INSERTED FROM SPECIFIC COLLECTION ***/
-				/*** LOOPS THROUGH ALL DOCUMENTS INSIDE THIS DATAPOINT ***/
-				db.collection(name).find().skip(db.collection(name).count() - 1).forEach(function(docs) {
+	// 			** FINDS LAST DATA INSERTED FROM SPECIFIC COLLECTION **
+	// 			/*** LOOPS THROUGH ALL DOCUMENTS INSIDE THIS DATAPOINT ***/
+	// 			db.collection(name).find().skip(db.collection(name).count() - 1).forEach(function(docs) {
 
-					io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
-					console.log("id: " + name + " temp: " + docs.temp + " time: " + docs.time); //debug (can be removed)
-				});
-			});
+	// 				io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
+	// 				console.log("id: " + name + " temp: " + docs.temp + " time: " + docs.time); //debug (can be removed)
+	// 			});
+	// 		});
 			
-		//io.emit(graph_msg);
-		});
+	// 	//io.emit(graph_msg);
+	// 	});
 
 		 
-	});	
+	// });
 
 	
 }
@@ -80,6 +80,9 @@ sp.on("open", function() {
 	sp.on("data", function(data) {
 		var id = data.split(":")[0];
     	var temp = parseInt(data.split(":")[1]);
+    	var time = new Date().getTime();
+
+    	io.emit("DB Value", "X" + id + ":" + temp + ":" + time);
 
     	//Insert into the database called temperatures
     	//To print the database, enter "mongo". Then "db.temperatures.find().pretty()" in the terminal. 
