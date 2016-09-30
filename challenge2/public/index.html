@@ -7,71 +7,124 @@
     <script src="/d3.min.js" charset="utf-8"></script>
     <script src="/c3.min.js"></script>
     <script src="/jquery-3.1.1.min.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+    <script type="text/javascript" src="./canvasjs.min.js"></script>
   </head>
   <body>
 
     <!-- We can insert here the different buttons we will use to change the charts -->
     <input type="button" value="We don't need this for now :)" onclick="addNewPoint();"></input>
 
-    <div id="tempChart" width="900px" height="500px">
+    <div id="chartContainer" style="height: 300px; width: 100%;">
     </div>
     <script>
       
-      /***** DRAWS CHART DURING LOAD TIME *****/
-      google.charts.load('current', {packages:['corechart']});
-      google.charts.setOnLoadCallback(drawChart); // calls drawChart method
       
-      /***** VARIABLES THAT CONTROLS CHART *****/
-      var chart = null; // this is the chart object
-      var data = null; // array representing the values inside the chart
+    var chartTitle = "Real Time Temperature Readings";
+    var names = [];
+    var sensorData = {}; 
+      
+    var addTimePoint = function(dataset, sensorName, timepoint, value){
+              if (!dataset.hasOwnProperty(sensorName)){
+                dataset[sensorName] = [];
+              }
+              dataset[sensorName].push({
+                x: timepoint,
+                y: value
+              });
+              refreshChart();
+            }
+      
+    var compareReadingsByTime = function(readingA,readingB){
+      return readingA.x - readingB.x;
+    }
 
-      /***** OPTIONS FOR CHART (Axis & titles ...) *****/
-      var options = {
-        title: 'XBee Temperatures',
-        height: 500,
-        animation: { duration: 700, easing: 'out' },
-        hAxis: {
-          title: 'Time',
+    var makeData = function(dataset){
+      var data = [];
+      for (var sensorName in dataset){
+        var subset = makeSubset(dataset, sensorName);
+        data.push(subset);
+      }
+      return data;
+    }
+
+    var makeSubset = function(dataset, sensorName){
+      var subset = {
+        type: "line",
+        showInLegend: true,
+        lineThickness: 2,
+        name: "Sensor " + sensorName,
+        dataPoints: dataset[sensorName].sort(compareReadingsByTime)
+      };
+      return subset;
+    }
+
+    var renderChart = function(sensorData){
+      var data = makeData(sensorData);
+      var chartParams = {
+        title: {
+          text: chartTitle,
+          fontSize: 15
         },
-        vAxis: {
-          title: 'Temperature',
-        }
+        data: data
       };
 
-      /***** CALLED AFTER PAGE IS LOADED TO DRAW INITIAL STATE OF GRAPH *****/
-      // NOTE: MIGHT NOT BE NEEDING THIS ONE TO ADD ROWS TO DATA
-      // WE CAN ADD ROWS TO DATA DIRECTLY INSIDE SOCKET.ON
-      function drawChart() {
-        data = new google.visualization.DataTable();
-        data.addColumn('number', 'Time');
-        data.addColumn('number', 'Xbee 1');
-        data.addColumn('number', 'Xbee 2');
-        data.addColumn('number', 'Xbee 3');
-        data.addRows([
-          [1, 40,50,51],
-          [2, 50,50,51],
-          [3, 67,69,54]
-        ]);
+        chartParams = 
+      {
+          title:{
+            text: chartTitle,
+            fontSize: 30
+          },
+          animationEnabled: false,
+          axisX:{
+            gridColor: "Silver",
+            tickColor: "silver",
+          },                        
+          toolTip:{
+            shared:true
+          },
+          theme: "theme1",
+          axisY: {
+            gridColor: "Silver",
+            tickColor: "silver"
+          },
+          legend:{
+            verticalAlign: "center",
+            horizontalAlign: "right"
+          },
+          data: data,
+          legend:{
+            cursor:"pointer",
+            itemclick:function(e){
+              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                e.dataSeries.visible = false;
+              }
+              else{
+                e.dataSeries.visible = true;
+              }
+              chart.render();
+            }
+          }
+      };
 
-        chart = new google.visualization.LineChart(document.getElementById('tempChart'));
-        chart.draw(data, options);
-      }
+    var chart = new CanvasJS.Chart("chartContainer", chartParams);
+      chart.render();
+    }
 
-      /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
-      var socket = io();
-      socket.on('DB Value', function(msg) {
-        // Parsing value into integers
-        var XbeeID, temp, time;
-        XbeeID = parseInt(msg.split(':')[0]);
-        temp = parseInt(msg.split(':')[1]);
-        time = parseInt(msg.split(':')[2]);
+    var refreshChart = function(){
+      renderChart(sensorData);
+    }
 
-        // TODO: Add these values to the graph
-
-        // TODO: call this function to update the chart afterwards
-        //chart.draw(data, options);
-
-      });
+          /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
+          var socket = io();
+          socket.on('DB Value', function(msg) {
+            // Parsing value into integers
+            var XbeeID, temp, time;
+            XbeeID = msg.split(':')[0];
+            temp = parseInt(msg.split(':')[1]);
+            time = parseInt(msg.split(':')[2]);
+            addTimePoint(sensorData, XbeeID, time, temp);
+          });
     </script>
   </body>
 </html>
