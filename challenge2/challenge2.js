@@ -12,7 +12,7 @@ var url = 'mongodb://localhost:27017/test';
 
 var insertTemp = function(id, temp, db, callback) {
 	db.collection("X" + id).insertOne({
-		"time" : new Date(),
+		"time" : Math.floor(new Date().getTime() / 1000),
 		"temp" : temp
 	}, function(err, result) {
 		assert.equal(err, null);
