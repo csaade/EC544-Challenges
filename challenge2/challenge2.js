@@ -11,7 +11,7 @@ var url = 'mongodb://localhost:27017/test';
 // Connect to DB
 
 var insertTemp = function(id, temp, db, callback) {
-	db.collection(id).insertOne({
+	db.collection("X" + id).insertOne({
 		"time" : new Date(),
 		"temp" : temp
 	}, function(err, result) {
