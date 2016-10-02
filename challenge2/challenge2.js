@@ -28,28 +28,27 @@ portConfig = {
     parser: serialport.parsers.readline("\n")
 };
 
-var sp;
-sp = new serialport(portName, portConfig);
-sp.on("open", function() {
-	console.log("open");
-	sp.flush();
-	sp.on("data", function(data) {
-		var id = data.split(":")[0];
-    	var temp = parseInt(data.split(":")[1]);
+// var sp;
+// sp = new serialport(portName, portConfig);
+// sp.on("open", function() {
+// 	console.log("open");
+// 	sp.on("data", function(data) {
+// 		var id = data.split(":")[0];
+//     	var temp = parseInt(data.split(":")[1]);
 
-    	//Insert into the database called temperatures
-    	//To print the database, enter "mongo". Then "db.temperatures.find().pretty()" in the terminal.
-    	mongo.connect(url, function(err, db) {
-			  assert.equal(null, err);
-			  console.log('Connected to mongodb server');
-			  insertTemp(id, temp, db, function() {
-				  db.close();
-			  });
-			});
+//     	//Insert into the database called temperatures
+//     	//To print the database, enter "mongo". Then "db.temperatures.find().pretty()" in the terminal.
+//     	mongo.connect(url, function(err, db) {
+// 			  assert.equal(null, err);
+// 			  console.log('Connected to mongodb server');
+// 			  insertTemp(id, temp, db, function() {
+// 				  db.close();
+// 			  });
+// 			});
 
-		//realtimeGraph();
-	});
-});
+// 		//realtimeGraph();
+// 	});
+// });
 
 /*
 ** Function that sends all the data from the database to the front-end HTML
@@ -111,7 +110,7 @@ var average = function(callback) {
 				/** FINDS LAST DATA INSERTED FROM SPECIFIC COLLECTION **/
 				/*** LOOPS THROUGH ALL DOCUMENTS INSIDE THIS DATAPOINT ***/
 				var docs = db.collection(name).find().sort({_id:-1}).limit(1);
-				console.log(docs);
+				//console.log(docs);
 					//  total = total + parseInt(docs.temp);
 					//  console.log("total: " + total);
 					//  //length += 1; 
