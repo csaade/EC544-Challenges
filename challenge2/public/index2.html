@@ -24,11 +24,10 @@
         data: {
             columns: [],
             type: 'bar'
-          },
-          bar: {
-            width: {
-              ratio: 0.5
-            }
+        },
+        bar: {
+          width: {
+            ratio: 0.5
           }
         },
         axis: {
@@ -42,8 +41,11 @@
       });
       function addNewPoint()
       {
-        d.columns[0].push(40);
-        chart.load(d);
+        // Use jQuery to load the JSON data from the node server
+        $.getJSON("/historical", function(json_data) {
+          // Successfully loaded some JSON data
+          chart.load(json_data);
+        });
       }
     </script>
   </body>
