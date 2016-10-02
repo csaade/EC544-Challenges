@@ -33,12 +33,12 @@
     </div>
 </div>
     <script>
-      
-    
+
+
     var chartTitle = "Real Time Temperature Readings";
     var names = [];
-    var sensorData = {}; 
-      
+    var sensorData = {};
+
     var addTimePoint = function(dataset, sensorName, timepoint, value){
               if (!dataset.hasOwnProperty(sensorName)){
                 dataset[sensorName] = [];
@@ -49,7 +49,7 @@
               });
               refreshChart();
             }
-      
+
     var compareReadingsByTime = function(readingA,readingB){
       return readingA.x - readingB.x;
     }
@@ -84,7 +84,7 @@
         data: data
       };
 
-        chartParams = 
+        chartParams =
       {
           title:{
             text: chartTitle,
@@ -94,7 +94,7 @@
           axisX:{
             gridColor: "Silver",
             tickColor: "silver",
-          },                        
+          },
           toolTip:{
             shared:true
           },
@@ -129,7 +129,7 @@
     var refreshChart = function(){
       renderChart(sensorData);
     }
-    
+
           /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
           var socket = io();
           socket.on('DB Value', function(msg) {

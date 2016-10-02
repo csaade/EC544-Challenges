@@ -12,7 +12,7 @@ var url = 'mongodb://localhost:27017/test';
 
 var insertTemp = function(id, temp, db, callback) {
 	db.collection("X" + id).insertOne({
-		"time" : Math.floor(new Date().getTime() / 1000),
+		"time" : new Date(),/*Math.floor(new Date().getTime() / 1000),*/
 		"temp" : temp
 	}, function(err, result) {
 		assert.equal(err, null);
@@ -22,12 +22,34 @@ var insertTemp = function(id, temp, db, callback) {
 };
 
 // Connect to serialport
-
 var portName = process.argv[2],
 portConfig = {
     baudRate: 9600,
     parser: serialport.parsers.readline("\n")
 };
+
+var sp;
+sp = new serialport(portName, portConfig);
+sp.on("open", function() {
+	console.log("open");
+	sp.flush();
+	sp.on("data", function(data) {
+		var id = data.split(":")[0];
+    	var temp = parseInt(data.split(":")[1]);
+
+    	//Insert into the database called temperatures
+    	//To print the database, enter "mongo". Then "db.temperatures.find().pretty()" in the terminal.
+    	mongo.connect(url, function(err, db) {
+			  assert.equal(null, err);
+			  console.log('Connected to mongodb server');
+			  insertTemp(id, temp, db, function() {
+				  db.close();
+			  });
+			});
+
+		//realtimeGraph();
+	});
+});
 
 /*
 ** Function that sends all the data from the database to the front-end HTML
@@ -38,7 +60,7 @@ portConfig = {
 **		- XbeeID:TemperatureValue:TimeStamp
 */
 var realtimeGraph = function(callback){
-	
+
 	device_id = [];
 	graph_msg = [];
 
@@ -78,7 +100,7 @@ var average = function(callback) {
 	mongo.connect(url, function(err, db) {
 		assert.equal(null, err);
 		console.log('Connected to mongodb server'); //debug (remove this later)
-		
+
 		/*** LOOPING THROUGH ALL COLLECTIONS INSIDE DB ***/
 		//Note: every data coming from an Xbee has its own collection in the DB
 		db.collections(function(e, cols) {
@@ -99,6 +121,7 @@ var average = function(callback) {
 					// io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
 			});
 
+
 		});	
 		
 	});
@@ -109,6 +132,23 @@ var average = function(callback) {
 	io.emit('Average', average);
 }
 
+
+/***
+Function that sends all the data from the database to the front-end HTML
+** (1) Connects to database
+** (2) Submits a query to get the last data from the database (from all collections)
+** (3) Emits it (i.e. sends it to front-end)
+** NOTE: sends it to front end in the following format (format can be modified below)
+**		- XbeeID:TemperatureValue:TimeStamp
+** NOTE: instead of displaying one
+***/
+/*
+var historicalGraph = function(callback){
+device_id = [];
+graph_msg = [];
+>>>>>>> origin/master
+
+/*
 var sp;
 sp = new serialport.SerialPort(portName, portConfig);
 
@@ -122,7 +162,7 @@ sp.on("open", function() {
     	io.emit("DB Value", "X" + id + ":" + temp + ":" + time);
 
     	//Insert into the database called temperatures
-    	//To print the database, enter "mongo". Then "db.temperatures.find().pretty()" in the terminal. 
+    	//To print the database, enter "mongo". Then "db.temperatures.find().pretty()" in the terminal.
     	mongo.connect(url, function(err, db) {
 		  assert.equal(null, err);
 		  console.log('Connected to mongodb server');
@@ -134,12 +174,70 @@ sp.on("open", function() {
 		average();
 	});
 
-	
-});
 
+});
+*/
 
 // Return the html page and other web things
 app.use(express.static('public'));
+
+// Return a json array for the historical graph
+app.get('/historical', function(req, res) {
+	var data = {
+		columns: [
+			['Xbee 1', 60, 57, 56, 89, 34],
+			['Xbee 2', 56, 57, 58, 59, 60],
+			['Xbee 3', 68, 62, 64, 54, 89]
+		],
+		type: 'bar'
+	};
+
+	// Get data from mongodb
+	var xbeeData = {};
+	var xbeeTemps = [];
+	xbeeData.columns = [];
+	xbeeData.type = 'bar';
+
+	mongo.connect(url, function(err, db) {
+		assert.equal(null, err);
+		console.log('Connected to mongodb server'); //debug (remove this later)
+
+		//Note: every data coming from an Xbee has its own collection in the DB
+		db.collections(function(e, cols) {
+			cols.forEach(function(col) {
+
+				var name = col.collectionName; //get XbeeID
+				var date_30sec_ago = new Date();
+				date_30sec_ago.setSeconds(date_30sec_ago.getSeconds() - 30);
+
+				// Push each found temperature element to the json list
+				//jsonData.push(name);
+				db.collection(name).find({
+	          "time" : {"$gte": date_30sec_ago}
+	      //}).each(function(err, doc) {
+				}).toArray(function(err, docs) {
+					//console.log("temperature " + doc.temp);
+					xbeeTemps = [name];
+					docs.forEach(function(temp) {
+						console.log('adding entry to list!!??');
+						xbeeTemps.push(67);
+					});
+
+					console.log("this xbee data: " + xbeeTemps);
+					xbeeData.columns.push(xbeeTemps);
+				});
+
+				//db.collection(name).find().skip(db.collection(name).count() - 1).forEach(function(docs) {
+				//io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
+				//console.log("id: " + name + " temp: " + docs.temp + " time: " + docs.time); //debug (can be removed)
+			});
+		});
+	});
+
+	console.log('Sending the data!');
+	res.setHeader('Content-Type', 'application/json');
+	res.send(JSON.stringify(xbeeData));
+});
 
 // Listen on port
 http.listen(3000, function(){
