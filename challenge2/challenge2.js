@@ -11,12 +11,16 @@ var url = 'mongodb://localhost:27017/test';
 // Connect to DB
 
 var insertTemp = function(id, temp, db, callback) {
+	// Check for null id
+	if(id == null || id == "")
+		return;
+
 	db.collection("X" + id).insertOne({
 		"time" : new Date(),/*Math.floor(new Date().getTime() / 1000),*/
 		"temp" : temp
 	}, function(err, result) {
 		assert.equal(err, null);
-		console.log("Inserted a temperature!!!!!!!!");
+		console.log("X" + id + " Inserted a temperature!!!!!!!!");
 		callback();
 	});
 };
@@ -121,14 +125,14 @@ portConfig = {
 };
 
 var sp;
-sp = new serialport.SerialPort(portName, portConfig);
+sp = new serialport(portName, portConfig);
 
 sp.on("open", function() {
 	console.log("open");
 	sp.on("data", function(data) {
 		var id = data.split(":")[0];
     	var temp = parseInt(data.split(":")[1]);
-    	var time = new Date().getTime();
+    	var time = new Date().getTime() / 1000;
 
     	io.emit("DB Value", "X" + id + ":" + temp + ":" + time);
 
@@ -171,7 +175,7 @@ app.get('/xbees', function(req, res) {
 });
 
 // Return a json array for the historical graph
-app.get('/historical/:xbeeId', function(req, res) {
+app.get('/historical/:xbeeId/timebackward/:time', function(req, res) {
 	// Get data from mongodb
 	var xbeeData = {};
 	var xbeeTemps = [];
@@ -179,25 +183,25 @@ app.get('/historical/:xbeeId', function(req, res) {
 	xbeeData.type = 'bar';
 
 	var xbeeId = req.params["xbeeId"];
-	console.log("parameter: " + xbeeId);
+	var timeBackward = parseInt(req.params["time"]); // in seconds
 
 	mongo.connect(url, function(err, db) {
 		assert.equal(null, err);
 		console.log('Connected to mongodb server'); //debug (remove this later)
 
-		var date_30sec_ago = new Date();
-		date_30sec_ago.setSeconds(date_30sec_ago.getSeconds() - 30);
+		var past_date = new Date();
+		past_date.setTime(past_date.getTime() - timeBackward * 1000); // *1000 due to milliseconds
 
-		db.collection(req.params["xbeeId"]).find({
-			"time": {"$gte": date_30sec_ago}
-		}).toArray(function(err, docs) {
+		db.collection(xbeeId).find(
+			{"time": {"$gte": past_date}},
+			{"sort": ["time", "desc"]}
+		).toArray(function(err, docs) {
 			xbeeTemps = [xbeeId];
 			docs.forEach(function(doc) {
 				xbeeTemps.push(doc.temp);
 			});
 			xbeeData.columns.push(xbeeTemps);
 
-			console.log('Sending the data!');
 			res.setHeader('Content-Type', 'application/json');
 			res.send(JSON.stringify(xbeeData));
 		})
@@ -207,12 +211,12 @@ app.get('/historical/:xbeeId', function(req, res) {
 		// 	cols.forEach(function(col) {
 
 		// 		var name = col.collectionName; //get XbeeID
-		// 		var date_30sec_ago = new Date();
-		// 		date_30sec_ago.setSeconds(date_30sec_ago.getSeconds() - 30);
+		// 		var past_date = new Date();
+		// 		past_date.setSeconds(past_date.getSeconds() - 30);
 
 		// 		// Push each found temperature element to the json list
 		// 		db.collection(name).find({
-		// 			"time" : {"$gte": date_30sec_ago}
+		// 			"time" : {"$gte": past_date}
 		// 		}).toArray(function(err, docs) {
 		// 			xbeeTemps = [name];
 		// 			docs.forEach(function(doc) {

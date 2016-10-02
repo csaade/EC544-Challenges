@@ -17,8 +17,22 @@
     <!--<input type="button" value="We don't need this for now :)" onclick="loadPoints();"></input> -->
     <div id="historicalChart" style="height: 300px; width: 100%;">
     </div>
+    <select id="timeSelect">
+      <option value="30">Past 30 seconds</option>
+      <option value="60">Past minute</option>
+      <option value="300">Past 5 minutes</option>
+      <option value="900">Past 15 minutes</option>
+      <option value="1800">Past 30 minutes</option>
+      <option value="3600">Past hour</option>
+      <option value="10800">Past 3 hours</option>
+      <option value="86400">Past day</option>
+    </select>
+    <br>
+    <br>
+    <a href="#" onclick="loadXbeeList();">Reload data</a>
     <script>
       var xbees = [];
+      var timeBackward = 30;
 
       var chart = c3.generate({
         bindto: '#historicalChart',
@@ -40,12 +54,15 @@
           }
         }
       });
+
       function loadPoints()
       {
-        // Use jQuery to load the JSON data from the node server
-        $.getJSON("/historical/X2", function(json_data) {
-          // Successfully loaded some JSON data
-          chart.load(json_data);
+        xbees.forEach(function(xbee) {
+          // Use jQuery to load the JSON data from the node server
+          $.getJSON("/historical/"+xbee+"/timebackward/"+timeBackward, function(json_data) {
+            // Successfully loaded some JSON data
+            chart.load(json_data);
+          });
         });
       }
 
@@ -56,8 +73,15 @@
           loadPoints();
         });
       }
-      
+
+      // Load list of Xbees
       loadXbeeList();
+
+      // Respond to when the dropdown list changes
+      $("#timeSelect").change(function() {
+        timeBackward = this.value;
+        loadXbeeList();
+      });
 
     </script>
   </body>
