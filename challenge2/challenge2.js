@@ -72,6 +72,43 @@ var realtimeGraph = function(callback){
 	
 }
 
+var average = function(callback) {
+	var total = 0;
+	var length = 0;
+	mongo.connect(url, function(err, db) {
+		assert.equal(null, err);
+		console.log('Connected to mongodb server'); //debug (remove this later)
+		
+		/*** LOOPING THROUGH ALL COLLECTIONS INSIDE DB ***/
+		//Note: every data coming from an Xbee has its own collection in the DB
+		db.collections(function(e, cols) {
+			cols.forEach(function(col) {
+
+				var name = col.collectionName; //get XbeeID
+
+				/** FINDS LAST DATA INSERTED FROM SPECIFIC COLLECTION **/
+				/*** LOOPS THROUGH ALL DOCUMENTS INSIDE THIS DATAPOINT ***/
+				var docs = db.collection(name).find().sort({_id:-1}).limit(1);
+				console.log(docs);
+					//  total = total + parseInt(docs.temp);
+					//  console.log("total: " + total);
+					//  //length += 1; 
+					//  console.log("length: " + length);
+					// // //console.log("average!!!!!!!!");
+					// console.log("temp: " + docs.temp);
+					// io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
+			});
+
+		});	
+		
+	});
+	var average = parseInt(total/length);
+	total = 0;
+	//length = 0;
+	console.log("Average: " + average);
+	io.emit('Average', average);
+}
+
 var sp;
 sp = new serialport.SerialPort(portName, portConfig);
 
@@ -94,6 +131,7 @@ sp.on("open", function() {
 		  });
 		});
 		realtimeGraph();
+		average();
 	});
 
 	
