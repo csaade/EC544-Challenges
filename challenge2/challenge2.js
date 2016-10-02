@@ -142,13 +142,7 @@ Function that sends all the data from the database to the front-end HTML
 **		- XbeeID:TemperatureValue:TimeStamp
 ** NOTE: instead of displaying one
 ***/
-/*
-var historicalGraph = function(callback){
-device_id = [];
-graph_msg = [];
->>>>>>> origin/master
 
-/*
 var sp;
 sp = new serialport.SerialPort(portName, portConfig);
 
@@ -176,7 +170,6 @@ sp.on("open", function() {
 
 
 });
-*/
 
 // Return the html page and other web things
 app.use(express.static('public'));
@@ -211,25 +204,17 @@ app.get('/historical', function(req, res) {
 				date_30sec_ago.setSeconds(date_30sec_ago.getSeconds() - 30);
 
 				// Push each found temperature element to the json list
-				//jsonData.push(name);
 				db.collection(name).find({
-	          "time" : {"$gte": date_30sec_ago}
-	      //}).each(function(err, doc) {
+					"time" : {"$gte": date_30sec_ago}
 				}).toArray(function(err, docs) {
-					//console.log("temperature " + doc.temp);
 					xbeeTemps = [name];
-					docs.forEach(function(temp) {
-						console.log('adding entry to list!!??');
-						xbeeTemps.push(67);
+					docs.forEach(function(doc) {
+						xbeeTemps.push(doc.temp);
 					});
 
 					console.log("this xbee data: " + xbeeTemps);
 					xbeeData.columns.push(xbeeTemps);
 				});
-
-				//db.collection(name).find().skip(db.collection(name).count() - 1).forEach(function(docs) {
-				//io.emit("DB Value", name + ":" + docs.temp + ":" + docs.time); //MODIFY THIS TO SEND IT IN DIFFERENT FORMAT
-				//console.log("id: " + name + " temp: " + docs.temp + " time: " + docs.time); //debug (can be removed)
 			});
 		});
 	});
