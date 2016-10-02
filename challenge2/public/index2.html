@@ -14,11 +14,12 @@
   <body>
 
     <!-- We can insert here the different buttons we will use to change the charts -->
-    <!--<input type="button" value="We don't need this for now :)" onclick="addNewPoint();"></input> -->
-    <input type="button" value="Add something" onclick="addNewPoint();"></script>
+    <!--<input type="button" value="We don't need this for now :)" onclick="loadPoints();"></input> -->
     <div id="historicalChart" style="height: 300px; width: 100%;">
     </div>
     <script>
+      var xbees = [];
+
       var chart = c3.generate({
         bindto: '#historicalChart',
         data: {
@@ -39,14 +40,25 @@
           }
         }
       });
-      function addNewPoint()
+      function loadPoints()
       {
         // Use jQuery to load the JSON data from the node server
-        $.getJSON("/historical", function(json_data) {
+        $.getJSON("/historical/X2", function(json_data) {
           // Successfully loaded some JSON data
           chart.load(json_data);
         });
       }
+
+      function loadXbeeList()
+      {
+        $.getJSON("/xbees", function(json_data) {
+          xbees = json_data.names;
+          loadPoints();
+        });
+      }
+      
+      loadXbeeList();
+
     </script>
   </body>
 </html>
