@@ -2,6 +2,9 @@
 <html>
   <head>
     <title>Challenge 2 - Group 10</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="https://www.gstatic.com/charts/loader.js"></script>
     <link href="/c3.css" rel="stylesheet" type="text/css">
     <script src="/d3.min.js" charset="utf-8"></script>
@@ -12,10 +15,12 @@
     <!-- <script type="text/javascript" src="/canvasjs.min.js"></script> -->
   </head>
   <body>
+    <button type="button" class="btn btn-primary" onclick="window.location.href='index.html'" style="margin:10px 10px 10px 10px;">Real Time</button>
 
     <!-- We can insert here the different buttons we will use to change the charts -->
     <!--<input type="button" value="We don't need this for now :)" onclick="loadPoints();"></input> -->
-    <div id="historicalChart" style="height: 300px; width: 100%;">
+    <div class = "dropdown" id="historicalChart" style="height: 300px; width: 100%;">
+      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Time</button>
     </div>
     <select id="timeSelect">
       <option value="30">Past 30 seconds</option>
