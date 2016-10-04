@@ -34,7 +34,7 @@ Function that sends all the data from the database to the front-end HTML
 **		- XbeeID:TemperatureValue:TimeStamp
 ** NOTE: instead of displaying one
 ***/
-
+/*
 // Connect to serialport
 var portName = process.argv[2],
 portConfig = {
@@ -68,7 +68,7 @@ sp.on("open", function() {
 	});
 
 
-});
+});*/
 
 // Return the html page and other web things
 app.use(express.static('public'));
@@ -96,9 +96,8 @@ app.get('/xbees', function(req, res) {
 app.get('/historical/:xbeeId/timebackward/:time', function(req, res) {
 	// Get data from mongodb
 	var xbeeData = {};
-	var xbeeTemps = [];
-	xbeeData.columns = [];
-	xbeeData.type = 'bar';
+	xbeeData.times = [];
+	xbeeData.temps = [];
 
 	var xbeeId = req.params["xbeeId"];
 	var timeBackward = parseInt(req.params["time"]); // in seconds
@@ -111,43 +110,28 @@ app.get('/historical/:xbeeId/timebackward/:time', function(req, res) {
 		past_date.setTime(past_date.getTime() - timeBackward * 1000); // *1000 due to milliseconds
 
 		db.collection(xbeeId).find(
-			{"time": {"$gte": past_date}},
-			{"sort": ["time", "desc"]}
+			{"time": {"$gte": past_date}}
 		).toArray(function(err, docs) {
-			xbeeTemps = [xbeeId];
+			// Push the labels for x axis ('x') and xbee id
+			xbeeData.times.push('x');
+			xbeeData.temps.push(xbeeId);
+
+			// Chart needs nulls to show that there's no data
+			if(docs.length == 0) {
+				xbeeData.times.push(null);
+				xbeeData.temps.push(null);
+			}
+
+			// Loop through each 
 			docs.forEach(function(doc) {
-				xbeeTemps.push(doc.temp);
+				var thisTime = new Date(doc.time);
+				xbeeData.times.push(thisTime.toString());
+				xbeeData.temps.push(doc.temp);
 			});
-			xbeeData.columns.push(xbeeTemps);
 
 			res.setHeader('Content-Type', 'application/json');
 			res.send(JSON.stringify(xbeeData));
 		});
-
-		//Note: every data coming from an Xbee has its own collection in the DB
-		// db.collections(function(e, cols) {
-		// 	cols.forEach(function(col) {
-
-		// 		var name = col.collectionName; //get XbeeID
-		// 		var past_date = new Date();
-		// 		past_date.setSeconds(past_date.getSeconds() - 30);
-
-		// 		// Push each found temperature element to the json list
-		// 		db.collection(name).find({
-		// 			"time" : {"$gte": past_date}
-		// 		}).toArray(function(err, docs) {
-		// 			xbeeTemps = [name];
-		// 			docs.forEach(function(doc) {
-		// 				xbeeTemps.push(doc.temp);
-		// 			});
-
-		// 			console.log("this xbee data: " + xbeeTemps);
-		// 			xbeeData.columns.push(xbeeTemps);
-		// 		});
-		// 	});
-		// });
-
-
 	});
 });
 
