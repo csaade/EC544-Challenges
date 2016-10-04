@@ -10,31 +10,26 @@
     <script src="/d3.min.js" charset="utf-8"></script>
     <script src="/c3.min.js"></script>
     <script src="/jquery-3.1.1.min.js"></script>
-    <!-- <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script> -->
-    <!-- <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script> -->
-    <!-- <script type="text/javascript" src="/canvasjs.min.js"></script> -->
+
   </head>
   <body>
     <button type="button" class="btn btn-primary" onclick="window.location.href='index.html'" style="margin:10px 10px 10px 10px;">Real Time</button>
 
-    <!-- We can insert here the different buttons we will use to change the charts -->
-    <!--<input type="button" value="We don't need this for now :)" onclick="loadPoints();"></input> -->
-    <div class = "dropdown" id="historicalChart" style="height: 300px; width: 100%;">
-      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Select Time</button>
+    <div id="historicalChart">
     </div>
-    <select id="timeSelect">
-      <option value="30">Past 30 seconds</option>
-      <option value="60">Past minute</option>
-      <option value="300">Past 5 minutes</option>
-      <option value="900">Past 15 minutes</option>
-      <option value="1800">Past 30 minutes</option>
-      <option value="3600">Past hour</option>
-      <option value="10800">Past 3 hours</option>
-      <option value="86400">Past day</option>
+    <select id="timeSelect" style="margin:10px 10px 10px 10px; height:25px" class="btn btn-primary">
+      <option value="30">Past 30 Seconds</option>
+      <option value="60">Past Minute</option>
+      <option value="300">Past 5 Minutes</option>
+      <option value="900">Past 15 Minutes</option>
+      <option value="1800">Past 30 Minutes</option>
+      <option value="3600">Past Hour</option>
+      <option value="10800">Past 3 Hours</option>
+      <option value="86400">Past Day</option>
     </select>
     <br>
-    <br>
-    <a href="#" onclick="loadXbeeList();">Reload data</a>
+    <a href="#" style="margin-left:25px;" onclick="loadXbeeList();">Reload data</a>
+    </div> 
     <script>
       var xbees = [];
       var timeBackward = 30;
