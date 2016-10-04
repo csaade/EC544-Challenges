@@ -34,7 +34,7 @@ Function that sends all the data from the database to the front-end HTML
 **		- XbeeID:TemperatureValue:TimeStamp
 ** NOTE: instead of displaying one
 ***/
-/*
+
 // Connect to serialport
 var portName = process.argv[2],
 portConfig = {
@@ -68,7 +68,7 @@ sp.on("open", function() {
 	});
 
 
-});*/
+});
 
 // Return the html page and other web things
 app.use(express.static('public'));
