@@ -50,7 +50,8 @@ sp.on("open", function() {
 	sp.on("data", function(data) {
 		var id = data.split(":")[0];
     	var temp = parseInt(data.split(":")[1]);
-    	var time = new Date().getTime() / 1000;
+    	var time = new Date().getTime();
+    	console.log(new Date(time).toUTCString());
 
     	io.emit("DB Value", "X" + id + ":" + temp + ":" + time);
 
