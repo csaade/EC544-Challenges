@@ -80,20 +80,16 @@
         showInLegend: true,
         lineThickness: 2,
         name: "Sensor " + sensorName,
-        dataPoints: dataset[sensorName].sort(compareReadingsByTime)
+        dataPoints: dataset[sensorName].sort(compareReadingsByTime),
+        xValueType:"dateTime",
+        type: "line"
       };
       return subset;
     }
 
     var renderChart = function(sensorData){
       var data = makeData(sensorData);
-      var chartParams = {
-        title: {
-          text: chartTitle,
-          fontSize: 15
-        },
-        data: data
-      };
+      var chartParams;
 
         chartParams =
       {
@@ -105,9 +101,6 @@
           axisX:{
             gridColor: "Silver",
             tickColor: "silver",
-            intervalType: "second",
-            interval: 5,
-            valueFormatString: "hh mm ss",
             labelAngle: -30
           },
           toolTip:{

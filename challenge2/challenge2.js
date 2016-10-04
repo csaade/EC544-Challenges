@@ -51,8 +51,7 @@ sp.on("open", function() {
 		var id = data.split(":")[0];
     	var temp = parseInt(data.split(":")[1]);
     	var time = new Date().getTime();
-    	console.log(new Date(time).toUTCString());
-
+    	//var time_UTC = new Date(time).toUTCString();
     	io.emit("DB Value", "X" + id + ":" + temp + ":" + time);
 
     	//Insert into the database called temperatures
