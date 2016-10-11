@@ -10,19 +10,19 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     </head>
     <body>
-
+        <script>var socket = io()</script>
     <h1 style="text-align: center; color: #FF69B4;">Select Your LED!</h1>
     <div>
-    	<button type="button" class="btn btn-danger" style="margin: auto; display: block; margin-top: 30px; width: 70px;">Red</button>
+    	<button type="button" class="btn btn-danger" onclick="socket.emit('led_msg', 'r')" style="margin: auto; display: block; margin-top: 30px; width: 70px;">Red</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-primary" style="margin: auto; display: block; margin-top: 30px; width: 70px;">Blue</button>
+    	<button type="button" class="btn btn-primary" onclick="socket.emit('led_msg', 'b')"  style="margin: auto; display: block; margin-top: 30px; width: 70px;">Blue</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-success" style="margin: auto; display: block; margin-top: 30px; width: 70px;">Green</button>
+    	<button type="button" class="btn btn-success" onclick="socket.emit('led_msg', 'g')"  style="margin: auto; display: block; margin-top: 30px; width: 70px;">Green</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-warning" style="margin: auto; display: block; margin-top: 30px; width: 70px;">Yellow</button>
+    	<button type="button" class="btn btn-warning" onclick="socket.emit('led_msg', 'y')"  style="margin: auto; display: block; margin-top: 30px; width: 70px;">Yellow</button>
 	</div>
 	<div>
 		<img src="minions-1.jpg" style="margin: auto; display: block; width: 70%">
