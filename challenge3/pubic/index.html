@@ -2,27 +2,28 @@
 <html>
   <head>
     <title>Challenge 3 - Group 10</title>
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
-
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+
     </head>
     <body>
         <script>var socket = io()</script>
     <h1 style="text-align: center; color: #FF69B4;">Select Your LED!</h1>
     <div>
-    	<button type="button" class="btn btn-danger" onclick="socket.emit('led_msg', 'r')" style="margin: auto; display: block; margin-top: 30px; width: 70px;">Red</button>
+    	   <button type="button" class="btn btn-danger" onclick="socket.emit('led_msg', 'r')" style="margin: auto; display: block; margin-top: 30px; width: 100px;">Red: OFF</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-primary" onclick="socket.emit('led_msg', 'b')"  style="margin: auto; display: block; margin-top: 30px; width: 70px;">Blue</button>
+    	<button type="button" class="btn btn-primary" onclick="socket.emit('led_msg', 'b')"  style="margin: auto; display: block; margin-top: 30px; width: 100px;">Blue: OFF</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-success" onclick="socket.emit('led_msg', 'g')"  style="margin: auto; display: block; margin-top: 30px; width: 70px;">Green</button>
+    	<button type="button" class="btn btn-success" onclick="socket.emit('led_msg', 'g')"  style="margin: auto; display: block; margin-top: 30px; width:100px;">Green: OFF</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-warning" onclick="socket.emit('led_msg', 'y')"  style="margin: auto; display: block; margin-top: 30px; width: 70px;">Yellow</button>
+    	<button type="button" class="btn btn-warning" onclick="socket.emit('led_msg', 'y')"  style="margin: auto; display: block; margin-top: 30px; width: 100px;">Yellow: OFF</button>
 	</div>
 	<div>
 		<img src="minions-1.jpg" style="margin: auto; display: block; width: 70%">
