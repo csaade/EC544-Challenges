@@ -33,8 +33,7 @@
     function togglestate(button_id, status){
                 var text = document.getElementById(button_id).firstChild;
                 if ( status == "1"){text.data = "ON";}
-                else if (status == "0"){text.data = "OFF";}
-                console.log("poop");
+                if (status == "0"){text.data = "OFF";}
     }
     
     socket.on("status_msg", function(data) {

@@ -19,7 +19,6 @@ sp = new serialport(portName, portConfig);
 sp.on("open", function() {
 	console.log("open");
 	sp.on("data", function(data) {
-        console.log("Kyle is a nag");
         // Just received a status string from the arduino, sent it to the web page
         io.emit('status_msg', data);
 	});
