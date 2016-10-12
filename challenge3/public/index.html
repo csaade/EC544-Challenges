@@ -37,7 +37,7 @@
                 console.log("poop");
     }
     
-    socket.on("data", function(data) {
+    socket.on("status_msg", function(data) {
         var butt = data.split(":")[0];
         var status = data.split(":")[1];
         togglestate(butt,status);
