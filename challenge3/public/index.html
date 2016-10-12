@@ -32,7 +32,9 @@
     
     function togglestate(button_id, status){
                 var text = document.getElementById(button_id).firstChild;
-                text.data = status == "1" ? "ON" : "OFF";
+                if ( status == "1"){text.data = "ON";}
+                else if (status == "0"){text.data = "OFF";}
+                console.log("poop");
     }
 
     var sp = io();
@@ -40,7 +42,6 @@
         var butt = data.split(":")[0];
         var status = data.split(":")[1];
         togglestate(butt,status);
-        console.log("poop");
     });
         </script>
 
