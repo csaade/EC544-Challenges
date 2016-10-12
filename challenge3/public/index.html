@@ -14,21 +14,34 @@
         <script>var socket = io()</script>
     <h1 style="text-align: center; color: #FF69B4;">Select Your LED!</h1>
     <div>
-    	   <button type="button" class="btn btn-danger" onclick="socket.emit('led_msg', 'r')" style="margin: auto; display: block; margin-top: 30px; width: 100px;">Red: OFF</button>
+    	   <button type="button" id= "r" class="btn btn-danger" onclick="socket.emit('led_msg', 'r')" style="margin: auto; display: block; margin-top: 30px; width: 100px;">OFF</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-primary" onclick="socket.emit('led_msg', 'b')"  style="margin: auto; display: block; margin-top: 30px; width: 100px;">Blue: OFF</button>
+    	<button type="button" id= "b" class="btn btn-primary" onclick="socket.emit('led_msg', 'b')"  style="margin: auto; display: block; margin-top: 30px; width: 100px;">OFF</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-success" onclick="socket.emit('led_msg', 'g')"  style="margin: auto; display: block; margin-top: 30px; width:100px;">Green: OFF</button>
+    	<button type="button" id="g" class="btn btn-success" onclick="socket.emit('led_msg', 'g')"  style="margin: auto; display: block; margin-top: 30px; width:100px;">OFF</button>
 	</div>
 	<div>
-    	<button type="button" class="btn btn-warning" onclick="socket.emit('led_msg', 'y')"  style="margin: auto; display: block; margin-top: 30px; width: 100px;">Yellow: OFF</button>
+    	<button type="button" id="y" class="btn btn-warning" onclick="socket.emit('led_msg', 'y')"  style="margin: auto; display: block; margin-top: 30px; width: 100px;">OFF</button>
 	</div>
 	<div>
 		<img src="minions-1.jpg" style="margin: auto; display: block; width: 70%">
 	</div>
+<script> 
+    
+    function togglestate(button_id, status){
+                var text = document.getElementById(button_id).firstChild;
+                text.data = status == "1" ? "ON" : "OFF";
+    }
 
+    var sp = io();
+    sp.on("data", function(data) {
+        var butt = data.split(":")[0];
+        var status = data.split(":")[1];
+        togglestate(butt,status);
+    }
+        </script>
 
 	</body>
 	</html>
