@@ -36,9 +36,8 @@
                 else if (status == "0"){text.data = "OFF";}
                 console.log("poop");
     }
-
-    var sp = io();
-    sp.on("data", function(data) {
+    
+    socket.on("data", function(data) {
         var butt = data.split(":")[0];
         var status = data.split(":")[1];
         togglestate(butt,status);
