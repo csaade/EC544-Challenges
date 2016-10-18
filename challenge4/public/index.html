@@ -10,9 +10,6 @@
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
     <script type="text/javascript" src="./canvasjs.min.js"></script>
-    
-    <script type="text/javascript" src="//cdn.jsdelivr.net/particle-api-js/5/particle.min.js">
-    </script>
   </head>
   <body>
 
@@ -34,20 +31,24 @@
 </div>
     <script>
 
-    // var Particle = require('particle-api-js');
-    // var particle = new Particle();
-
-    // particle.login({username: 'umohnani@bu.edu', password: 'urvashi95'}).then(
-    // function(data){
-    //   console.log('API call completed on promise resolve: ', data.body.access_token);
-    // },
-    // function(err) {
-    //   console.log('API call completed on promise fail: ', err);
-    // });
-
     var chartTitle = "Real Time Temperature Readings";
     var names = [];
     var sensorData = {};
+
+
+    var socket = io();
+    socket.on('DB Value', function(msg) {
+
+      console.log("received data");
+      // Parsing value into integers
+      var temp, time, name;
+      name  = msg.split(':')[0];
+      temp = parseInt(msg.split(':')[1]);
+      time = parseInt(msg.split(':')[2]);
+      console.log(time);
+      addTimePoint(sensorData, name, time, temp);
+      average(sensorData);
+    });
 
     var average = function(sensorData) {
       var total = 0;
@@ -147,20 +148,10 @@
       chart.render();
     }
 
+
     var refreshChart = function(){
       renderChart(sensorData);
     }
-          /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
-          var socket = io();
-          socket.on('DB Value', function(msg) {
-            // Parsing value into integers
-            var XbeeID, temp, time;
-            XbeeID = 1;
-            temp = msg;
-            time = 100;
-            addTimePoint(sensorData, XbeeID, time, temp);
-            average(sensorData);
-          });
     </script>
   </body>
 </html>

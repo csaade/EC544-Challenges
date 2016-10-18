@@ -1,25 +1,20 @@
-// var mongo = require('mongodb').MongoClient;
-//var serialport = require('serialport');
+var mongo = require('mongodb').MongoClient;
 var Particle = require('particle-api-js');
-
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-
 var io = require('socket.io')(http);
+var Particle = require('particle-api-js');
+var particle = new Particle();
 
 io.on('connection',function(socket) {
-	//
 	console.log("Connected");
 });
+
 var device_id = [];
 var graph_msg = [];
 // var url = 'mongodb://localhost:27017/test';
 // Connect to DB
-
-
-var Particle = require('particle-api-js');
-var particle = new Particle();
 
 // var token = particle.login({username: 'goulakos@bu.edu', password: 'group10'});
 
@@ -29,28 +24,63 @@ var particle = new Particle();
 var token;
 particle.login({username: 'goulakos@bu.edu', password: 'group10'}).then(
   function(data){
-  console.log('API call completed on promise resolve: ', data.body.access_token);
-  token = data.body.access_token;
-  setTimeout(retrieveData, 2000);
-}, function(err) {
+	  console.log('API call completed on promise resolve: ', data.body.access_token);
+	  token = data.body.access_token;
+	  setTimeout(retrieveData, 2000);
+	}, function(err) {
     console.log('API call completed on promise fail: ', err);
 });
 
-io.emit('test');
+//io.emit('test');
 var retrieveData = function()
 {
-	particle.getVariable({ deviceId: 'BabyPierre1', name: 'temp', auth: token }).then(function(data) {
-		// console.log('Device variable retrieved successfully:', data);
-		var time = new Date().getTime();
-		var msg = data.body.result + ":" + time;
-		//io.emit('DB Value', data.body.result + ":" + time);
-		io.emit('DB Value', msg);
-		console.log(data.body.result + ":" + time);
-		// console.log(data.body.result);
+
+	var devicesPr = particle.listDevices({ auth: token });
+
+	devicesPr.then(
+  	function(devices){
+		for(index in devices.body) {
+			if(devices.body[index]['connected']) {
+				var deviceName = devices.body[index]['name'];
+				particle.getVariable({ deviceId: deviceName, name: 'temp', auth: token }).then(function(data) {
+					var time = new Date().getTime();
+
+					var devPr = particle.getDevice({ deviceId: data.body.coreInfo['deviceID'], auth: token });
+					devPr.then(
+					  function(deviceAttr){
+							var msg = deviceAttr.body['name'] + ":" + data.body.result + ":" + time;
+							io.emit('DB Value', msg);
+							//***** PUSH VALUE TO DATABASE HERE *****/
+
+							console.log(msg);
+					  },
+					  function(err) {
+					    console.log('API call failed: ', err);
+					  }
+					);
+				}, function(err) {
+				 	console.log('An error occurred while getting attrs:', err);
+				});
+			}
+		}
 		setTimeout(retrieveData, 2000);
-	}, function(err) {
-		console.log('An error occurred while getting attrs:', err);
-	});
+  },
+  function(err) {
+    console.log('List devices call failed: ', err);
+  }
+);
+	// particle.getVariable({ deviceId: 'BabyPierre1', name: 'temp', auth: token }).then(function(data) {
+	// 	// console.log('Device variable retrieved successfully:', data);
+	// 	var time = new Date().getTime();
+	// 	var msg = data.body.result + ":" + time;
+	// 	//io.emit('DB Value', data.body.result + ":" + time);
+	// 	io.emit('DB Value', msg);
+	// 	console.log(deviceID + data.body.result + ":" + time);
+	// 	// console.log(data.body.result);
+	// 	setTimeout(retrieveData, 2000);
+	// }, function(err) {
+	// 	console.log('An error occurred while getting attrs:', err);
+	// });
 }
 
 
@@ -107,7 +137,7 @@ var retrieveData = function()
 // 				xbeeData.temps.push(null);
 // 			}
 
-// 			// Loop through each 
+// 			// Loop through each
 // 			docs.forEach(function(doc) {
 // 				var thisTime = new Date(doc.time);
 // 				xbeeData.times.push(thisTime.toString());
