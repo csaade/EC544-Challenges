@@ -2,11 +2,16 @@
 //var serialport = require('serialport');
 var Particle = require('particle-api-js');
 
-// var express = require('express');
-// var app = express();
-// var http = require('http').Server(app);
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
 
-// var io = require('socket.io')(http);
+var io = require('socket.io')(http);
+
+io.on('connection',function(socket) {
+	//
+	console.log("Connected");
+});
 var device_id = [];
 var graph_msg = [];
 // var url = 'mongodb://localhost:27017/test';
@@ -21,21 +26,32 @@ var particle = new Particle();
 // var devicesPr = particle.listDevices({ auth: token });
 
 
+var token;
 particle.login({username: 'goulakos@bu.edu', password: 'group10'}).then(
   function(data){
-    console.log('API call completed on promise resolve: ', data.body.access_token);
-	  //var devicesPr = particle.listDevices({ auth: data.body.access_token });
-	//console.log(devicesPr);
-
-	particle.getVariable({ deviceId: '2a0047001747353236343033', name: 'tempString', auth: data.body.access_token }).then(function(data) {
-  console.log('Device variable retrieved successfully:', data);
+  console.log('API call completed on promise resolve: ', data.body.access_token);
+  token = data.body.access_token;
+  setTimeout(retrieveData, 2000);
 }, function(err) {
-  console.log('An error occurred while getting attrs:', err);
-});},
-  function(err) {
     console.log('API call completed on promise fail: ', err);
-  });
+});
 
+io.emit('test');
+var retrieveData = function()
+{
+	particle.getVariable({ deviceId: 'BabyPierre1', name: 'temp', auth: token }).then(function(data) {
+		// console.log('Device variable retrieved successfully:', data);
+		var time = new Date().getTime();
+		var msg = data.body.result + ":" + time;
+		//io.emit('DB Value', data.body.result + ":" + time);
+		io.emit('DB Value', msg);
+		console.log(data.body.result + ":" + time);
+		// console.log(data.body.result);
+		setTimeout(retrieveData, 2000);
+	}, function(err) {
+		console.log('An error occurred while getting attrs:', err);
+	});
+}
 
 
 // particle.getVariable({ deviceId: 'Trump', name: 'temp', auth: token }).then(function(data) {
@@ -103,8 +119,8 @@ particle.login({username: 'goulakos@bu.edu', password: 'group10'}).then(
 // 		});
 // 	});
 // });
-
+app.use(express.static('public'));
 // Listen on port
-// http.listen(3000, function(){
-//   console.log('listening on *:3000');
-// });
+http.listen(3000, function(){
+  console.log('listening on *:3000');
+});

@@ -1,0 +1,21 @@
+{
+  "name": "Challenge2-Group10",
+  "version": "1.0.0",
+  "description": "Challenge 2 for Group 10",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csaade/EC544-challenges"
+  },
+  "author": "Group 10",
+  "license": "ISC",
+  "readme": "Group 10 npm packages",
+  "dependencies": {
+    "express": "^4.14",
+    "mongodb": "^2.2.10",
+    "socket.io": "^1.4.8",
+    "particle-api-js": "6.0.8"
+  }
+}

@@ -146,18 +146,24 @@
     var chart = new CanvasJS.Chart("chartContainer", chartParams);
       chart.render();
     }
+    var socket = io();
+
+    socket.on('test',function(){
+      console.log("blah");
+    });
 
     var refreshChart = function(){
       renderChart(sensorData);
     }
           /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
-          var socket = io();
           socket.on('DB Value', function(msg) {
+            console.log("hiiiiiiiiii");
             // Parsing value into integers
             var XbeeID, temp, time;
-            XbeeID = msg.split(':')[0];
-            temp = parseInt(msg.split(':')[1]);
-            time = parseInt(msg.split(':')[2]);
+            XbeeID = 1;
+            temp = parseInt(msg.split(':')[0]);
+            time = parseInt(msg.split(':')[1]);
+            console.log(time);
             addTimePoint(sensorData, XbeeID, time, temp);
             average(sensorData);
           });
