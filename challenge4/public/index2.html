@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Challenge 4 - Group 10</title>
+    <script src="/jquery-3.1.1.min.js"></script>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <link href="/c3.css" rel="stylesheet" type="text/css">
+    <script src="/d3.min.js" charset="utf-8"></script>
+    <script src="/c3.min.js"></script>
+  </head>
+  <body>
+    <button type="button" class="btn btn-primary" onclick="window.location.href='index.html'" style="margin:10px 10px 10px 10px;">Real Time</button>
+
+    <div id="historicalChart">
+    </div>
+    <select id="timeSelect" style="margin:10px 10px 10px 10px; height:25px" class="btn btn-primary">
+      <option value="30">Past 30 Seconds</option>
+      <option value="60">Past Minute</option>
+      <option value="300">Past 5 Minutes</option>
+      <option value="900">Past 15 Minutes</option>
+      <option value="1800">Past 30 Minutes</option>
+      <option value="3600">Past Hour</option>
+      <option value="10800">Past 3 Hours</option>
+      <option value="86400">Past Day</option>
+    </select>
+    <br>
+    <a href="#" style="margin-left:25px;" onclick="loadXbeeList();">Reload data</a>
+    </div> 
+    <script>
+      var devices = [];
+      var timeBackward = 30;
+
+      // Tue Oct 04 2016 01:36:50 GMT-0400 (EDT)
+      var chart = c3.generate({
+        bindto: '#historicalChart',
+        data: {
+            x: 'x',
+            xFormat: '%a %b %d %Y %H:%M:%S GMT%Z (EDT)',/*'%Y-%m-%dT%H:%M:%S.%LZ',*/
+            columns: [],
+            type: 'line'
+        },
+        bar: {
+          width: {
+            ratio: 0.25
+          }
+        },
+        axis: {
+          x: {
+            type: 'timeseries',
+            tick: {
+              format: '%H:%M:%S'
+            },
+            label: {text: 'Time'}
+          },
+          y: {
+            label: {text: 'Temperature'}
+          }
+        }
+      });
+
+      function loadPoints()
+      {
+        devices.forEach(function(device) {
+          // Use jQuery to load the JSON data from the node server
+          $.getJSON("/historical/"+device+"/timebackward/"+timeBackward, function(json_data) {
+            // Successfully loaded some JSON data
+            chart.load({
+              columns: [
+                json_data.times,
+                json_data.temps
+              ]
+            });
+          });
+        });
+      }
+
+      function loadXbeeList()
+      {
+        $.getJSON("/devices", function(json_data) {
+          devices = json_data.names;
+          loadPoints();
+        });
+
+        //setTimeout(loadXbeeList, 1500);
+      }
+
+      loadXbeeList();
+
+      // Respond to when the dropdown list changes
+      $("#timeSelect").change(function() {
+        timeBackward = this.value;
+        loadXbeeList();
+      });
+
+    </script>
+  </body>
+</html>

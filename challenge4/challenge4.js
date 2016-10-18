@@ -1,4 +1,6 @@
 var mongo = require('mongodb').MongoClient;
+var assert = require('assert');
+var url = 'mongodb://localhost:27017/test';
 var Particle = require('particle-api-js');
 var express = require('express');
 var app = express();
@@ -13,12 +15,6 @@ io.on('connection',function(socket) {
 
 var device_id = [];
 var graph_msg = [];
-// var url = 'mongodb://localhost:27017/test';
-// Connect to DB
-
-// var token = particle.login({username: 'goulakos@bu.edu', password: 'group10'});
-
-// var devicesPr = particle.listDevices({ auth: token });
 
 
 var token;
@@ -31,31 +27,33 @@ particle.login({username: 'goulakos@bu.edu', password: 'group10'}).then(
     console.log('API call completed on promise fail: ', err);
 });
 
-/* a device looks like this:
-{ id: '3b0038001347353236343033',
-  name: 'Pho',
-  last_app: null,
-  last_ip_address: '168.122.146.184',
-  last_heard: '2016-10-18T06:20:31.799Z',
-  product_id: 1783,
-  connected: false,
-  platform_id: 6,
-  cellular: false,
-  status: 'normal' }
-*/
 var retrieveData = function()
 {
 	particle.listDevices({ auth: token }).then(function(devices) {
 		var time = new Date().getTime(); // Same time for all readings
+		var timeDB = new Date(); // time used for the database
+
 		devices.body.forEach(function(device) {
 			if(device.connected) {
 				particle.getVariable({ deviceId: device.id, name: 'temp', auth: token }).then(function(data) {
 					var temp = data.body.result;
 					var msg = device.name + ":" + temp + ":" + time;
 					io.emit("DB Value", msg);
-					//console.log(msg);
+					console.log(msg);
 
 					//// PUSH VALUE TO DATABASE HERE ////
+					mongo.connect(url, function(err, db) {
+					  assert.equal(null, err);
+					  console.log('Connected to mongodb server');
+					  db.collection(device.name).insertOne({
+						"time" : timeDB,/*Math.floor(new Date().getTime() / 1000),*/
+						"temp" : temp
+						}, function(err, result) {
+						assert.equal(err, null);
+						console.log(device.name + " Inserted a temperature!");
+						db.close();
+						});
+					  });
 				},
 				function(err) {
 					console.log("Error getting variable");
@@ -68,104 +66,70 @@ var retrieveData = function()
 		console.log("Error getting device list");
 	}
 );
-
-/*
-	var devicesPr = particle.listDevices({ auth: token });
-
-	devicesPr.then(
-  	function(devices){
-		for(index in devices.body) {
-			if(devices.body[index]['connected']) {
-				var deviceName = devices.body[index]['name'];
-				particle.getVariable({ deviceId: deviceName, name: 'temp', auth: token }).then(function(data) {
-					var time = new Date().getTime();
-
-					var devPr = particle.getDevice({ deviceId: data.body.coreInfo['deviceID'], auth: token });
-					devPr.then(
-					  function(deviceAttr){
-							var msg = deviceAttr.body['name'] + ":" + data.body.result + ":" + time;
-							io.emit('DB Value', msg);
-							// PUSH VALUE TO DATABASE HERE //
-
-							console.log(msg);
-					  },
-					  function(err) {
-					    console.log('API call failed: ', err);
-					  }
-					);
-				}, function(err) {
-				 	console.log('An error occurred while getting attrs:', err);
-				});
-			}
-		}*/
 }
 
+// Return list of devices
+app.get('/devices', function(req, res) {
+	mongo.connect(url, function(err, db) {
 
-// particle.getVariable({ deviceId: 'Trump', name: 'temp', auth: token }).then(function(data) {
-//   console.log('Device variable retrieved successfully:', data);
-// }, function(err) {
-//   console.log('An error occurred while getting attrs:', err);
-// });
+		db.listCollections().toArray(function(err, cols) {
+			var json_array = {};
+			json_array.names = [];
+			cols.forEach(function(col) {
+				json_array.names.push(col.name);
+			})
+			
+			console.log(json_array);
+			res.setHeader('Content-Type', 'application/json');
+			res.send(JSON.stringify(json_array));
+		});
 
-// var insertTemp = function(id, temp, db, callback) {
-// 	// Check for null id
-// 	if(id == null || id == "")
-// 		return;
-
-// 	db.collection("X" + id).insertOne({
-// 		"time" : new Date(),Math.floor(new Date().getTime() / 1000),
-// 		"temp" : temp
-// 	}, function(err, result) {
-// 		assert.equal(err, null);
-// 		console.log("X" + id + " Inserted a temperature!!!!!!!!");
-// 		callback();
-// 	});
-// };
-
-
+	})
+});
 
 // Return a json array for the historical graph
-// app.get('/historical/:xbeeId/timebackward/:time', function(req, res) {
-// 	// Get data from mongodb
-// 	var xbeeData = {};
-// 	xbeeData.times = [];
-// 	xbeeData.temps = [];
+app.get('/historical/:deviceName/timebackward/:time', function(req, res) {
+	// Get data from mongodb
+	var deviceData = {};
+	deviceData.times = [];
+	deviceData.temps = [];
 
-// 	var xbeeId = req.params["xbeeId"];
-// 	var timeBackward = parseInt(req.params["time"]); // in seconds
+	var deviceName = req.params["deviceName"];
+	var timeBackward = parseInt(req.params["time"]); // in seconds
 
-// 	mongo.connect(url, function(err, db) {
-// 		assert.equal(null, err);
-// 		console.log('Connected to mongodb server'); //debug (remove this later)
+	mongo.connect(url, function(err, db) {
+		assert.equal(null, err);
+		console.log('Connected to mongodb server'); //debug (remove this later)
 
-// 		var past_date = new Date();
-// 		past_date.setTime(past_date.getTime() - timeBackward * 1000); // *1000 due to milliseconds
+		var past_date = new Date();
+		past_date.setTime(past_date.getTime() - timeBackward * 1000); // *1000 due to milliseconds
 
-// 		db.collection(xbeeId).find(
-// 			{"time": {"$gte": past_date}}
-// 		).toArray(function(err, docs) {
-// 			// Push the labels for x axis ('x') and xbee id
-// 			xbeeData.times.push('x');
-// 			xbeeData.temps.push(xbeeId);
+		db.collection(deviceName).find(
+			{"time": {"$gte": past_date}}
+		).toArray(function(err, docs) {
+			// Push the labels for x axis ('x') and xbee id
+			deviceData.times.push('x');
+			deviceData.temps.push(deviceName);
 
-// 			// Chart needs nulls to show that there's no data
-// 			if(docs.length == 0) {
-// 				xbeeData.times.push(null);
-// 				xbeeData.temps.push(null);
-// 			}
+			// Chart needs nulls to show that there's no data
+			if(docs.length == 0) {
+				deviceData.times.push(null);
+				deviceData.temps.push(null);
+			}
 
-// 			// Loop through each
-// 			docs.forEach(function(doc) {
-// 				var thisTime = new Date(doc.time);
-// 				xbeeData.times.push(thisTime.toString());
-// 				xbeeData.temps.push(doc.temp);
-// 			});
+			// Loop through each
+			docs.forEach(function(doc) {
+				var thisTime = new Date(doc.time);
+				deviceData.times.push(thisTime.toString());
+				deviceData.temps.push(doc.temp);
+			});
 
-// 			res.setHeader('Content-Type', 'application/json');
-// 			res.send(JSON.stringify(xbeeData));
-// 		});
-// 	});
-// });
+			res.setHeader('Content-Type', 'application/json');
+			res.send(JSON.stringify(deviceData));
+		});
+	});
+});
+
 app.use(express.static('public'));
 // Listen on port
 http.listen(3000, function(){
