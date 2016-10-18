@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Challenge 2 - Group 10</title>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
+    <script type="text/javascript" src="./canvasjs.min.js"></script>
+    
+    <script type="text/javascript" src="//cdn.jsdelivr.net/particle-api-js/5/particle.min.js">
+    </script>
+  </head>
+  <body>
+
+    <!-- We can insert here the different buttons we will use to change the charts -->
+    <button type="button" class="btn btn-primary" onclick="window.location.href='index2.html'" style="margin:10px 10px 10px 10px;">Historical</button>
+
+    <div id="chartContainer" style="height: 300px; width: 100%;">
+    </div>
+    <div style="text-align:center;">
+      <h1>Average Temperature</h1>
+    </div>
+    <div class="row" id="box-search">
+    <div class="text-center" style="position:relative;">
+        <img src="images/circle.png" alt="" class="img-responsive" style="margin: 0 auto;">
+        <div style="position:absolute; top:35%; left:0%; width:100%;">
+            <h2 id="average" style="color: white;"></h2>
+        </div>
+    </div>
+</div>
+    <script>
+
+    // var Particle = require('particle-api-js');
+    // var particle = new Particle();
+
+    // particle.login({username: 'umohnani@bu.edu', password: 'urvashi95'}).then(
+    // function(data){
+    //   console.log('API call completed on promise resolve: ', data.body.access_token);
+    // },
+    // function(err) {
+    //   console.log('API call completed on promise fail: ', err);
+    // });
+
+    var chartTitle = "Real Time Temperature Readings";
+    var names = [];
+    var sensorData = {};
+
+    var average = function(sensorData) {
+      var total = 0;
+      var length = 0;
+      var avg;
+      for(sensorID in sensorData) {
+        total += sensorData[sensorID][sensorData[sensorID].length-1].y;
+        length++;
+      }
+
+      avg = (total/length).toPrecision(4);
+      var avg_display = avg.toString() + " C";
+      document.getElementById("average").innerHTML = avg_display;
+    }
+
+    var addTimePoint = function(dataset, sensorName, timepoint, value){
+        if (!dataset.hasOwnProperty(sensorName)){
+          dataset[sensorName] = [];
+        }
+        dataset[sensorName].push({
+          x: timepoint,
+          y: value
+        });
+        refreshChart();
+      }
+
+    var compareReadingsByTime = function(readingA,readingB){
+      return readingA.x - readingB.x;
+    }
+
+    var makeData = function(dataset){
+      var data = [];
+      for (var sensorName in dataset){
+        var subset = makeSubset(dataset, sensorName);
+        data.push(subset);
+      }
+      return data;
+    }
+
+    var makeSubset = function(dataset, sensorName){
+      var subset = {
+        type: "line",
+        showInLegend: true,
+        lineThickness: 2,
+        name: "Sensor " + sensorName,
+        dataPoints: dataset[sensorName].sort(compareReadingsByTime),
+        xValueType:"dateTime",
+        type: "line"
+      };
+      return subset;
+    }
+
+    var renderChart = function(sensorData){
+      var data = makeData(sensorData);
+      var chartParams;
+
+        chartParams =
+      {
+          title:{
+            text: chartTitle,
+            fontSize: 30
+          },
+          animationEnabled: false,
+          axisX:{
+            gridColor: "Silver",
+            tickColor: "silver",
+            labelAngle: -30
+          },
+          toolTip:{
+            shared:true
+          },
+          theme: "theme1",
+          axisY: {
+            gridColor: "Silver",
+            tickColor: "silver"
+          },
+          legend:{
+            verticalAlign: "center",
+            horizontalAlign: "right"
+          },
+          data: data,
+          legend:{
+            cursor:"pointer",
+            itemclick:function(e){
+              if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                e.dataSeries.visible = false;
+              }
+              else{
+                e.dataSeries.visible = true;
+              }
+              chart.render();
+            }
+          }
+      };
+
+    var chart = new CanvasJS.Chart("chartContainer", chartParams);
+      chart.render();
+    }
+
+    var refreshChart = function(){
+      renderChart(sensorData);
+    }
+          /***** GETS INVOKED WHENEVER WE RECEIVE A VALUE FROM DB (i.e BACKEND) *****/
+          var socket = io();
+          socket.on('DB Value', function(msg) {
+            // Parsing value into integers
+            var XbeeID, temp, time;
+            XbeeID = msg.split(':')[0];
+            temp = parseInt(msg.split(':')[1]);
+            time = parseInt(msg.split(':')[2]);
+            addTimePoint(sensorData, XbeeID, time, temp);
+            average(sensorData);
+          });
+    </script>
+  </body>
+</html>

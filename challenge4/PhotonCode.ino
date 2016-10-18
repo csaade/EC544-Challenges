@@ -1,5 +1,10 @@
 PRODUCT_ID(1783)
+<<<<<<< Updated upstream
 PRODUCT_VERSION(12)
+=======
+PRODUCT_VERSION(13)
+
+>>>>>>> Stashed changes
 
 #include <math.h>
 
