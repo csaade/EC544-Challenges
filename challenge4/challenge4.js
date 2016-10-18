@@ -31,10 +31,45 @@ particle.login({username: 'goulakos@bu.edu', password: 'group10'}).then(
     console.log('API call completed on promise fail: ', err);
 });
 
-//io.emit('test');
+/* a device looks like this:
+{ id: '3b0038001347353236343033',
+  name: 'Pho',
+  last_app: null,
+  last_ip_address: '168.122.146.184',
+  last_heard: '2016-10-18T06:20:31.799Z',
+  product_id: 1783,
+  connected: false,
+  platform_id: 6,
+  cellular: false,
+  status: 'normal' }
+*/
 var retrieveData = function()
 {
+	particle.listDevices({ auth: token }).then(function(devices) {
+		var time = new Date().getTime(); // Same time for all readings
+		devices.body.forEach(function(device) {
+			if(device.connected) {
+				particle.getVariable({ deviceId: device.id, name: 'temp', auth: token }).then(function(data) {
+					var temp = data.body.result;
+					var msg = device.name + ":" + temp + ":" + time;
+					io.emit("DB Value", msg);
+					//console.log(msg);
 
+					//// PUSH VALUE TO DATABASE HERE ////
+				},
+				function(err) {
+					console.log("Error getting variable");
+				});
+			}
+		});
+		setTimeout(retrieveData, 2000);
+	},
+	function(err) {
+		console.log("Error getting device list");
+	}
+);
+
+/*
 	var devicesPr = particle.listDevices({ auth: token });
 
 	devicesPr.then(
@@ -50,7 +85,7 @@ var retrieveData = function()
 					  function(deviceAttr){
 							var msg = deviceAttr.body['name'] + ":" + data.body.result + ":" + time;
 							io.emit('DB Value', msg);
-							//***** PUSH VALUE TO DATABASE HERE *****/
+							// PUSH VALUE TO DATABASE HERE //
 
 							console.log(msg);
 					  },
@@ -62,25 +97,7 @@ var retrieveData = function()
 				 	console.log('An error occurred while getting attrs:', err);
 				});
 			}
-		}
-		setTimeout(retrieveData, 2000);
-  },
-  function(err) {
-    console.log('List devices call failed: ', err);
-  }
-);
-	// particle.getVariable({ deviceId: 'BabyPierre1', name: 'temp', auth: token }).then(function(data) {
-	// 	// console.log('Device variable retrieved successfully:', data);
-	// 	var time = new Date().getTime();
-	// 	var msg = data.body.result + ":" + time;
-	// 	//io.emit('DB Value', data.body.result + ":" + time);
-	// 	io.emit('DB Value', msg);
-	// 	console.log(deviceID + data.body.result + ":" + time);
-	// 	// console.log(data.body.result);
-	// 	setTimeout(retrieveData, 2000);
-	// }, function(err) {
-	// 	console.log('An error occurred while getting attrs:', err);
-	// });
+		}*/
 }
 
 
