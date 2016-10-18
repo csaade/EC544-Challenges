@@ -1,11 +1,12 @@
 PRODUCT_ID(1783)
-PRODUCT_VERSION(10)
+PRODUCT_VERSION(12)
 
 #include <math.h>
 
 double temp = 0;
 int thermistorPin = A1;
 int rawADC = 0;
+char tempString[10];
 
 void setup()
 {
@@ -24,6 +25,9 @@ void loop()
   //temp = temp - 273.15;
 
   temp = ((((rawADC * 3.3)/4095) - 0.5) * 100) - 85;
+  //snprintf(tempString, 10, "%f", temp);
+
+  //Particle.publish("sendTemp", tempString, PRIVATE);
 
   delay(500);
 }
