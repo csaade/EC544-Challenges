@@ -1,6 +1,3 @@
-PRODUCT_ID(1783)
-PRODUCT_VERSION(14)
-
 #include <math.h>
 #include <LIDARLite.h>
 //#include <Servo.h>
@@ -14,8 +11,8 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 
 void setup()
 {
-  wheels.attach(8); // initialize wheel servo to Digital IO Pin #8
-  esc.attach(9); // initialize ESC to Digital IO Pin #9
+  wheels.attach(D2); // initialize wheel servo to Digital IO Pin #8
+  esc.attach(D3); // initialize ESC to Digital IO Pin #9
   /*  If you're re-uploading code via USB while leaving the ESC powered on,
    *  you don't need to re-calibrate each time, and you can comment this part out.
    */
