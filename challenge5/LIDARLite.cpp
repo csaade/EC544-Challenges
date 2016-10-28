@@ -51,16 +51,16 @@ LIDARLite::LIDARLite(){}
 ------------------------------------------------------------------------------*/
 void LIDARLite::begin(int configuration, bool fasti2c, char lidarliteAddress)
 {
-  Wire.begin(); // Start I2C
-  if(fasti2c)
-  {
+  // if(fasti2c)
+  // {
     // #if ARDUINO >= 157
       // Wire.setClock(400000UL); // Set I2C frequency to 400kHz, for Arduino Due
-      Wire.setSpeed(CLOCK_SPEED_400KHZ);
     // #else
     //   TWBR = ((F_CPU / 400000UL) - 16) / 2; // Set I2C frequency to 400kHz
     // #endif
-  }
+  // }
+  Wire.setSpeed(CLOCK_SPEED_400KHZ);
+  Wire.begin(); // Start I2C
   configure(configuration, lidarliteAddress); // Configuration settings
 } /* LIDARLite::begin */
 
