@@ -1,3 +1,6 @@
+PRODUCT_ID(1783)
+PRODUCT_VERSION(17)
+
 #include <math.h>
 #include <LIDARLite.h>
 //#include <Servo.h>
@@ -9,14 +12,23 @@ int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 
+LIDARLite lidar;
+char *distanceString;
+
 void setup()
 {
+  /*Serial.begin(9600);*/
   wheels.attach(D2); // initialize wheel servo to Digital IO Pin #8
   esc.attach(D3); // initialize ESC to Digital IO Pin #9
   /*  If you're re-uploading code via USB while leaving the ESC powered on,
    *  you don't need to re-calibrate each time, and you can comment this part out.
    */
   calibrateESC();
+
+  distanceString = (char *)malloc(10 * sizeof(char));
+
+  lidar.begin(0, true);
+  lidar.configure(0);
 }
 
 /* Convert degree value to radians */
@@ -56,5 +68,13 @@ void oscillate(){
 
 void loop()
 {
-   oscillate();
+   //oscillate();
+
+   /*Serial.println(lidar.distance());*/
+   int distance = lidar.distance();
+   itoa(distance, distanceString, 10);
+
+   Particle.publish("distance", distanceString);
+
+   delay(500);
 }
