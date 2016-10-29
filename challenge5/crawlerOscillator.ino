@@ -6,7 +6,7 @@ PRODUCT_VERSION(18)
 //#include <Servo.h>
 #include <SharpIR.h>
 
-#define model 20150
+//#define model 20150
 // ir: the pin where your sensor is attached
 // model: an int that determines your sensor:  1080 for GP2Y0A21Y
 //                                            20150 for GP2Y0A02Y
@@ -22,6 +22,7 @@ SharpIR ir(D4, 20150);
 LIDARLite lidar;
 char *distanceString5;
 char *distanceString6;
+char *distanceIR;
 
 
 bool initial = TRUE;
@@ -45,6 +46,7 @@ void setup()
 
   distanceString5 = (char *)malloc(10 * sizeof(char));
   distanceString6 = (char *)malloc(10 * sizeof(char));
+  distanceIR = (char *)malloc(10 * sizeof(char));
 
   digitalWrite(D5, HIGH);
   digitalWrite(D6, LOW);
@@ -137,23 +139,13 @@ void loop()
   Particle.publish("distance6", distanceString6);
 
   delay(10);
-
-
-  unsigned long pepe1=millis();  // takes the time before the loop on the library begins
-
   int dis = ir.distance();  // this returns the distance to the object you're measuring
-  Serial.print("Mean distance: ");  // returns it to the serial monitor
-  Serial.println(dis);
-
-  unsigned long pepe2=millis()-pepe1;  // the following gives you the time taken to get the measurement
-  Serial.print("Time taken (ms): ");
-  Serial.println(pepe2);
-
-
-  if(dis < 50)
+  itoa(dis, distanceIR, 10);
+  Particle.publish("dis", distanceIR);
+  if(dis < 25)
   {
-    wheels.write(90);
     esc.write(90); //neutral
-    delay(50000);
+    delay(5000);
   }
+  delay(10);
 }
