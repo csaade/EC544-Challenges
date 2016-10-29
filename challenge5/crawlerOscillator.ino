@@ -24,14 +24,16 @@ char *distanceString;
 
 void setup()
 {
-  Serial.begin(9600);
+  /*Serial.begin(9600);
+  Serial.println("What's up");*/
+
   wheels.attach(D2); // initialize wheel servo to Digital IO Pin #8
   esc.attach(D3); // initialize ESC to Digital IO Pin #9
   /*  If you're re-uploading code via USB while leaving the ESC powered on,
    *  you don't need to re-calibrate each time, and you can comment this part out.
    */
   calibrateESC();
-  
+
   distanceString = (char *)malloc(10 * sizeof(char));
 
   lidar.begin(0, true);
@@ -79,15 +81,20 @@ void oscillate(){
 */
 void loop()
 {
-  delay(500);
+  delay(1000);
 
   /*Serial.println(lidar.distance());*/
-  int distance = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
+  int distance = lidar.distance();
+  /*Serial.println(distance);*/
   itoa(distance, distanceString, 10);
 
-  //Particle.publish("distance", distanceString);
+  /*Serial.print("** Received distance: ");
+  Serial.println(distance);*/
+
+  Particle.publish("distance", distanceString);
   /*Serial.println(distance);*/
 
+  /*
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
 
   int dis = ir.distance();  // this returns the distance to the object you're measuring
@@ -105,4 +112,5 @@ void loop()
     esc.write(90); //neutral
     delay(50);
   }
+  */
 }
