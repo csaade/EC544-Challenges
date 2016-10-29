@@ -22,6 +22,10 @@ SharpIR ir(D4, 20150);
 LIDARLite lidar;
 char *distanceString;
 
+
+bool initial = TRUE;
+int initial_distance;
+
 void setup()
 {
   /*Serial.begin(9600);
@@ -82,19 +86,30 @@ void oscillate(){
 void loop()
 {
   delay(1000);
+  int distance = 0;
 
-  /*Serial.println(lidar.distance());*/
-  int distance = lidar.distance();
-  /*Serial.println(distance);*/
-  itoa(distance, distanceString, 10);
+  if(initial) {
+    initial = FALSE;
+    inital_distance = lidar.distance();
+  } else {
+    /*Serial.println(lidar.distance());*/
+    distance = lidar.distance();
+    /*Serial.println(distance);*/
+    itoa(distance, distanceString, 10);
 
-  /*Serial.print("** Received distance: ");
-  Serial.println(distance);*/
+    /*Serial.print("** Received distance: ");
+    Serial.println(distance);*/
 
-  Particle.publish("distance", distanceString);
+    Particle.publish("distance", distanceString);
 
-  esc.write(0); // full forward
-  //if(distance < )
+    esc.write(0); // full forward
+    if(distance < initial_distance) {
+      wheels.write(90); // go left?
+    }
+    else {
+      wheels.write(90); // go write
+    }
+  }
   /*Serial.println(distance);*/
 
   /*
