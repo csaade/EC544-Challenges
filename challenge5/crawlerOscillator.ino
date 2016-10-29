@@ -92,6 +92,9 @@ void loop()
   Serial.println(distance);*/
 
   Particle.publish("distance", distanceString);
+
+  esc.write(0);
+  if(distance < )
   /*Serial.println(distance);*/
 
   /*
