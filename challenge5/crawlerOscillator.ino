@@ -1,10 +1,17 @@
 PRODUCT_ID(1783)
-PRODUCT_VERSION(17)
+PRODUCT_VERSION(14)
 
 #include <math.h>
 #include <LIDARLite.h>
 //#include <Servo.h>
+#include <SharpIR.h>
 
+#define ir A0
+#define model 20150
+// ir: the pin where your sensor is attached
+// model: an int that determines your sensor:  1080 for GP2Y0A21Y
+//                                            20150 for GP2Y0A02Y
+//                                            (working distance range according to the datasheets)
 Servo wheels; // servo for turning the wheels
 Servo esc; // not actually a servo, but controlled like one!
 bool startup = true; // used to ensure startup only happens once
@@ -12,23 +19,14 @@ int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 
-LIDARLite lidar;
-char *distanceString;
-
 void setup()
 {
-  /*Serial.begin(9600);*/
-  wheels.attach(D2); // initialize wheel servo to Digital IO Pin #8
-  esc.attach(D3); // initialize ESC to Digital IO Pin #9
+  wheels.attach(8); // initialize wheel servo to Digital IO Pin #8
+  esc.attach(9); // initialize ESC to Digital IO Pin #9
   /*  If you're re-uploading code via USB while leaving the ESC powered on,
    *  you don't need to re-calibrate each time, and you can comment this part out.
    */
   calibrateESC();
-
-  distanceString = (char *)malloc(10 * sizeof(char));
-
-  lidar.begin(0, true);
-  lidar.configure(0);
 }
 
 /* Convert degree value to radians */
@@ -54,7 +52,7 @@ void calibrateESC(){
 
 /* Oscillate between various servo/ESC states, using a sine wave to gradually
  *  change speed and turn values.
- */
+ *
 void oscillate(){
   for (int i =0; i < 360; i++){
     double rad = degToRad(i);
@@ -65,16 +63,29 @@ void oscillate(){
     delay(50);
   }
 }
-
+*/
 void loop()
 {
-   //oscillate();
+  delay(200);   
 
-   /*Serial.println(lidar.distance());*/
-   int distance = lidar.distance();
-   itoa(distance, distanceString, 10);
+  unsigned long pepe1=millis();  // takes the time before the loop on the library begins
 
-   Particle.publish("distance", distanceString);
+  int dis=SharpIR.distance();  // this returns the distance to the object you're measuring
 
-   delay(500);
+
+  Serial.print("Mean distance: ");  // returns it to the serial monitor
+  Serial.println(dis);
+  
+  unsigned long pepe2=millis()-pepe1;  // the following gives you the time taken to get the measurement
+  Serial.print("Time taken (ms): ");
+  Serial.println(pepe2);  
+
+
+  
+  if(dis < 50)
+  {
+    wheels.write(90);
+    esc.write(90); //neutral
+    delay(50);
+  }
 }
