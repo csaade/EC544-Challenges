@@ -20,7 +20,8 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 
 SharpIR ir(D4, 20150);
 LIDARLite lidar;
-char *distanceString;
+char *distanceString5;
+char *distanceString6;
 
 
 bool initial = TRUE;
@@ -42,18 +43,25 @@ void setup()
 
   calibrateESC();
 
-  distanceString = (char *)malloc(10 * sizeof(char));
+  distanceString5 = (char *)malloc(10 * sizeof(char));
+  distanceString6 = (char *)malloc(10 * sizeof(char));
 
   digitalWrite(D5, HIGH);
   digitalWrite(D6, LOW);
-  delay(5);
+  delay(20);
   lidar.begin(0, true);
   lidar.configure(0);
-  lidar.changeAddress(LIDARLITE_ADDR_SECOND, LIDARLITE_ADDR_DEFAULT);
+  lidar.changeAddress(LIDARLITE_ADDR_SECOND, true, LIDARLITE_ADDR_DEFAULT);
+
+  digitalWrite(D6, HIGH);
+  delay(20);
+  lidar.configure(0);
+  /*lidar.changeAddress(LIDARLITE_ADDR_SECOND, LIDARLITE_ADDR_DEFAULT);
+  lidar.configure(0, LIDARLITE_ADDR_SECOND);
   delay(5);
   digitalWrite(D6, HIGH);
   delay(5);
-  lidar.configure(0);
+  lidar.configure(0);*/
 
   //lidar.begin(0, true);
   //lidar.configure(0);
@@ -94,6 +102,8 @@ void oscillate(){
   }
 }
 */
+int distance5;
+int distance6;
 void loop()
 {
   delay(1000);
@@ -117,24 +127,16 @@ void loop()
       wheels.write(90); // go write
     }
   }*/
-  digitalWrite(D6, LOW);
-  digitalWrite(D5, HIGH);
-  /*Serial.println(lidar.distance());*/
-  int distance5 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
-  /*Serial.println(distance);*/
-  itoa(distance5, distanceString, 10);
+  distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
+  itoa(distance5, distanceString5, 10);
+  Particle.publish("distance5", distanceString5);
+  delay(10);
 
-  /*Serial.print("** Received distance: ");
-  Serial.println(distance);*/
+  distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
+  itoa(distance6, distanceString6, 10);
+  Particle.publish("distance6", distanceString6);
 
-  Particle.publish("distance5", distanceString);
-  /*Serial.println(distance);*/
-  delay(1);
-  digitalWrite(D6, HIGH);
-  digitalWrite(D5, LOW);
-  int distance6 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
-  itoa(distance6, distanceString, 10);
-  Particle.publish("distance6", distanceString);
+  delay(10);
 
   /*
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
