@@ -136,7 +136,7 @@ void loop()
   itoa(distance6, distanceString, 10);
   Particle.publish("distance6", distanceString);
 
-  /*
+
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
 
   int dis = ir.distance();  // this returns the distance to the object you're measuring
@@ -152,7 +152,6 @@ void loop()
   {
     wheels.write(90);
     esc.write(90); //neutral
-    delay(50);
+    delay(50000);
   }
-  */
 }
