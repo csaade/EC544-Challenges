@@ -97,20 +97,15 @@ void oscillate(){
 void loop()
 {
   delay(1000);
-<<<<<<< Updated upstream
-  int distance = 0;
+  /*int distance = 0;
 
   if(initial) {
     initial = FALSE;
     inital_distance = lidar.distance();
   } else {
-    /*Serial.println(lidar.distance());*/
     distance = lidar.distance();
-    /*Serial.println(distance);*/
     itoa(distance, distanceString, 10);
 
-    /*Serial.print("** Received distance: ");
-    Serial.println(distance);*/
 
     Particle.publish("distance", distanceString);
 
@@ -121,12 +116,11 @@ void loop()
     else {
       wheels.write(90); // go write
     }
-  }
-=======
-  /*digitalWrite(D5, HIGH);
-  digitalWrite(D6, LOW);*/
+  }*/
+  digitalWrite(D6, LOW);
+  digitalWrite(D5, HIGH);
   /*Serial.println(lidar.distance());*/
-  int distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
+  int distance5 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
   /*Serial.println(distance);*/
   itoa(distance5, distanceString, 10);
 
@@ -134,12 +128,11 @@ void loop()
   Serial.println(distance);*/
 
   Particle.publish("distance5", distanceString);
->>>>>>> Stashed changes
   /*Serial.println(distance);*/
   delay(1);
-  /*digitalWrite(D6, HIGH);
-  digitalWrite(D5, LOW);*/
-  int distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
+  digitalWrite(D6, HIGH);
+  digitalWrite(D5, LOW);
+  int distance6 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
   itoa(distance6, distanceString, 10);
   Particle.publish("distance6", distanceString);
 
