@@ -1,5 +1,5 @@
 PRODUCT_ID(1783)
-PRODUCT_VERSION(17)
+PRODUCT_VERSION(18)
 
 #include <math.h>
 #include <LIDARLite.h>
@@ -17,7 +17,7 @@ char *distanceString;
 
 void setup()
 {
-  /*Serial.begin(9600);*/
+  Serial.begin(9600);
   wheels.attach(D2); // initialize wheel servo to Digital IO Pin #8
   esc.attach(D3); // initialize ESC to Digital IO Pin #9
   /*  If you're re-uploading code via USB while leaving the ESC powered on,
@@ -29,6 +29,10 @@ void setup()
 
   lidar.begin(0, true);
   lidar.configure(0);
+  //lidar.changeAddress(LIDARLITE_ADDR_SECOND, LIDARLITE_ADDR_DEFAULT);
+
+  //lidar.begin(0, true);
+  //lidar.configure(0);
 }
 
 /* Convert degree value to radians */
@@ -71,10 +75,11 @@ void loop()
    //oscillate();
 
    /*Serial.println(lidar.distance());*/
-   int distance = lidar.distance();
-   itoa(distance, distanceString, 10);
+   int distance = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
+   /*itoa(distance, distanceString, 10);*/
 
-   Particle.publish("distance", distanceString);
+   //Particle.publish("distance", distanceString);
+   Serial.println(distance);
 
    delay(500);
 }

@@ -127,6 +127,24 @@ void LIDARLite::configure(int configuration, char lidarliteAddress)
   }
 } /* LIDARLite::configure */
 
+/*
+  Change address
+*/
+void LIDARLite::changeAddress(char newAddress, char oldAddress)
+{
+  // Read the serial number of the lidar module
+  byte serialNumber[2];
+  read(0x96, 2, serialNumber, true, oldAddress);
+
+  // Write the serial number to the module (allows you to set the I2C address)
+  write(0x18, serialNumber[0], oldAddress);
+  write(0x19, serialNumber[1], oldAddress);
+
+  // Write the new I2c address and disable default address
+  write(0x1A, newAddress, oldAddress);
+  write(0x1E, 0x08, oldAddress);
+}
+
 /*------------------------------------------------------------------------------
   Reset
 
