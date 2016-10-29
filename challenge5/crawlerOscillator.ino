@@ -93,8 +93,8 @@ void loop()
 
   Particle.publish("distance", distanceString);
 
-  esc.write(0);
-  if(distance < )
+  esc.write(0); // full forward
+  //if(distance < )
   /*Serial.println(distance);*/
 
   /*
