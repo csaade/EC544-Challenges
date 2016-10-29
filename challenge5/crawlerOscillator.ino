@@ -25,7 +25,7 @@ char *distanceString6;
 
 
 bool initial = TRUE;
-int initial_distance;
+int initial_distance5, inital_distance6;
 
 void setup()
 {
@@ -107,54 +107,51 @@ int distance6;
 void loop()
 {
   delay(1000);
-  /*int distance = 0;
+  int distance = 0;
 
   if(initial) {
     initial = FALSE;
-    inital_distance = lidar.distance();
+    inital_distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
+    inital_distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
   } else {
-    distance = lidar.distance();
-    itoa(distance, distanceString, 10);
 
 
-    Particle.publish("distance", distanceString);
+    distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
+    itoa(distance5, distanceString5, 10);
+    Particle.publish("distance5", distanceString5);
+    delay(10);
+
+    distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
+    itoa(distance6, distanceString6, 10);
+    Particle.publish("distance6", distanceString6);
 
     esc.write(0); // full forward
-    if(distance < initial_distance) {
+    if(distance5 < initial_distance) {
       wheels.write(90); // go left?
     }
     else {
       wheels.write(90); // go write
     }
-  }*/
-  distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
-  itoa(distance5, distanceString5, 10);
-  Particle.publish("distance5", distanceString5);
-  delay(10);
-
-  distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
-  itoa(distance6, distanceString6, 10);
-  Particle.publish("distance6", distanceString6);
+  }
 
   delay(10);
 
-  /*
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
 
-  int dis = ir.distance();  // this returns the distance to the object you're measuring
-  Serial.print("Mean distance: ");  // returns it to the serial monitor
-  Serial.println(dis);
+  int disIR = ir.distance();  // this returns the distance to the object you're measuring
+  //Serial.print("Mean distance: ");  // returns it to the serial monitor
+  //Serial.println(dis);
 
   unsigned long pepe2=millis()-pepe1;  // the following gives you the time taken to get the measurement
-  Serial.print("Time taken (ms): ");
-  Serial.println(pepe2);
+  //Serial.print("Time taken (ms): ");
+  //Serial.println(pepe2);
 
 
-  if(dis < 50)
+  if(disIR < 50)
   {
     wheels.write(90);
     esc.write(90); //neutral
-    delay(50);
+    delay(50000);
   }
-  */
+
 }
