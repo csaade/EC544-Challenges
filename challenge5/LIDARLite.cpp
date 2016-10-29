@@ -61,7 +61,7 @@ void LIDARLite::begin(int configuration, bool fasti2c, char lidarliteAddress)
   // }
   Wire.setSpeed(CLOCK_SPEED_400KHZ);
   Wire.begin(); // Start I2C
-  configure(configuration, lidarliteAddress); // Configuration settings
+  //configure(configuration, lidarliteAddress); // Configuration settings
 } /* LIDARLite::begin */
 
 /*------------------------------------------------------------------------------

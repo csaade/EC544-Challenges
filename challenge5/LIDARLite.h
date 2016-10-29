@@ -26,7 +26,7 @@
 #define LIDARLite_h
 
 #define LIDARLITE_ADDR_DEFAULT 0x62
-#define LIDARLITE_ADDR_SECOND 0x63
+#define LIDARLITE_ADDR_SECOND 0x64
 
 //#include <Arduino.h>
 
