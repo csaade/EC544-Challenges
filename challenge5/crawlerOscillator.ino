@@ -6,7 +6,6 @@ PRODUCT_VERSION(18)
 //#include <Servo.h>
 #include <SharpIR.h>
 
-#define ir A0
 #define model 20150
 // ir: the pin where your sensor is attached
 // model: an int that determines your sensor:  1080 for GP2Y0A21Y
@@ -19,6 +18,10 @@ int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 
+SharpIR ir(D4, 20150);
+LIDARLite lidar;
+char *distanceString;
+
 void setup()
 {
   Serial.begin(9600);
@@ -28,7 +31,7 @@ void setup()
    *  you don't need to re-calibrate each time, and you can comment this part out.
    */
   calibrateESC();
-
+  
   distanceString = (char *)malloc(10 * sizeof(char));
 
   lidar.begin(0, true);
@@ -76,24 +79,25 @@ void oscillate(){
 */
 void loop()
 {
-  delay(200);
+  delay(500);
 
   /*Serial.println(lidar.distance());*/
   int distance = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
-  /*itoa(distance, distanceString, 10);*/
+  itoa(distance, distanceString, 10);
 
   //Particle.publish("distance", distanceString);
-  Serial.println(distance);
+  /*Serial.println(distance);*/
 
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
 
-  int dis=SharpIR.distance();  // this returns the distance to the object you're measuring
+  int dis = ir.distance();  // this returns the distance to the object you're measuring
   Serial.print("Mean distance: ");  // returns it to the serial monitor
   Serial.println(dis);
 
   unsigned long pepe2=millis()-pepe1;  // the following gives you the time taken to get the measurement
   Serial.print("Time taken (ms): ");
   Serial.println(pepe2);
+
 
   if(dis < 50)
   {

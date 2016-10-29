@@ -3,8 +3,8 @@
 
 	Arduino library for retrieving distance (in cm) from the analog GP2Y0A21Y and GP2Y0A02YK
 
-	From an original version of Dr. Marcal Casas-Cartagena (marcal.casas@gmail.com)     
-	
+	From an original version of Dr. Marcal Casas-Cartagena (marcal.casas@gmail.com)
+
     Version : 1.0 : Guillaume Rico
     + Remove average and use median
     + Definition of number of sample in .h
@@ -14,7 +14,7 @@
     + Add SHARP GP2Y0A710K0F for 100cm to 500cm by Thibaut Mauron
 
 	https://github.com/guillaume-rico/SharpIR
-    
+
     Original comment from Dr. Marcal Casas-Cartagena :
    The Sahrp IR sensors are cheap but somehow unreliable. I've found that when doing continous readings to a
    fix object, the distance given oscilates quite a bit from time to time. For example I had an object at
@@ -44,18 +44,18 @@
 // Initialisation function
 //  + irPin : is obviously the pin where the IR sensor is attached
 //  + sensorModel is a int to differentiate the two sensor models this library currently supports:
-//    > 1080 is the int for the GP2Y0A21Y and 
-//    > 20150 is the int for GP2Y0A02YK and 
+//    > 1080 is the int for the GP2Y0A21Y and
+//    > 20150 is the int for GP2Y0A02YK and
 //    > 100500 is the long for GP2Y0A710K0F
 //    The numbers reflect the distance range they are designed for (in cm)
 SharpIR::SharpIR(int irPin, long sensorModel) {
-  
+
     _irPin=irPin;
     _model=sensorModel;
-    
+
     // Define pin as Input
     pinMode (_irPin, INPUT);
-    
+
     #ifdef ARDUINO
       analogReference(DEFAULT);
     #endif
@@ -89,13 +89,13 @@ int SharpIR::distance() {
         // Read analog value
         ir_val[i] = analogRead(_irPin);
     }
-    
-    // Sort it 
+
+    // Sort it
     sort(ir_val,NB_SAMPLE);
 
-    
+
     if (_model==1080) {
-        
+
         // Different expressions required as the Photon has 12 bit ADCs vs 10 bit for Arduinos
         #ifdef ARDUINO
           distanceCM = 27.728 * pow(map(ir_val[NB_SAMPLE / 2], 0, 1023, 0, 5000)/1000.0, -1.2045);
@@ -107,7 +107,7 @@ int SharpIR::distance() {
 
         // Previous formula used by  Dr. Marcal Casas-Cartagena
         // puntualDistance=61.573*pow(voltFromRaw/1000, -1.1068);
-        
+
         // Different expressions required as the Photon has 12 bit ADCs vs 10 bit for Arduinos
         #ifdef ARDUINO
           distanceCM = 60.374 * pow(map(ir_val[NB_SAMPLE / 2], 0, 1023, 0, 5000)/1000.0, -1.16);
@@ -123,16 +123,16 @@ int SharpIR::distance() {
         #elif defined(SPARK)
           distanceCM = 12.08 * pow(map(ir_val[NB_SAMPLE / 2], 0, 4095, 0, 5000)/1000.0, -1.058);
         #endif
-        
+
     } else if (_model==100500){
-        
+
         #ifdef ARDUINO
           current = map(ir_val[NB_SAMPLE / 2], 0, 1023, 0, 5000);
         #elif defined(SPARK)
           current = map(ir_val[NB_SAMPLE / 2], 0, 4095, 0, 5000);
         #endif
         // use the inverse number of distance like in the datasheet (1/L)
-        // y = mx + b = 137500*x + 1125 
+        // y = mx + b = 137500*x + 1125
         // x = (y - 1125) / 137500
         // Different expressions required as the Photon has 12 bit ADCs vs 10 bit for Arduinos
         if (current < 1400 || current > 3300) {
@@ -145,7 +145,3 @@ int SharpIR::distance() {
 
     return distanceCM;
 }
-
-
-
-
