@@ -24,8 +24,8 @@ char *distanceString5;
 char *distanceString6;
 
 
-bool initial = TRUE;
-int initial_distance5, inital_distance6;
+bool initial;
+int inital_distance5, inital_distance6;
 
 void setup()
 {
@@ -65,6 +65,10 @@ void setup()
 
   //lidar.begin(0, true);
   //lidar.configure(0);
+
+  initial = true;
+  wheels.write(90);
+  esc.write(0);
 }
 
 /* Convert degree value to radians */
@@ -102,20 +106,17 @@ void oscillate(){
   }
 }
 */
-int distance5;
-int distance6;
 void loop()
 {
   delay(1000);
-  int distance = 0;
 
   if(initial) {
-    initial = FALSE;
+    initial = false;
     inital_distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
     inital_distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
   } else {
 
-
+    int distance5, distance6;
     distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
     itoa(distance5, distanceString5, 10);
     Particle.publish("distance5", distanceString5);
@@ -125,19 +126,16 @@ void loop()
     itoa(distance6, distanceString6, 10);
     Particle.publish("distance6", distanceString6);
 
-    esc.write(0); // full forward
-    if(distance5 < initial_distance) {
-      wheels.write(90); // go left?
+    if(distance5 < inital_distance5) {
+      wheels.write(45); // go left?
     }
     else {
-      wheels.write(90); // go write
+      wheels.write(90); // go right
     }
   }
 
-  delay(10);
-
+  /*delay(10);
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
-
   int disIR = ir.distance();  // this returns the distance to the object you're measuring
   //Serial.print("Mean distance: ");  // returns it to the serial monitor
   //Serial.println(dis);
@@ -152,6 +150,6 @@ void loop()
     wheels.write(90);
     esc.write(90); //neutral
     delay(50000);
-  }
+  }*/
 
 }
