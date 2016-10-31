@@ -134,6 +134,17 @@ void loop()
     }
   }
 
+  delay(10);
+  int dis = ir.distance();  // this returns the distance to the object you're measuring
+  itoa(dis, distanceIR, 10);
+  Particle.publish("dis", distanceIR);
+  if(dis < 25)
+  {
+    esc.write(90); //neutral
+    delay(5000);
+  }
+  delay(10);
+
   /*delay(10);
   unsigned long pepe1=millis();  // takes the time before the loop on the library begins
   int disIR = ir.distance();  // this returns the distance to the object you're measuring
