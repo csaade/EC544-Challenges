@@ -3,7 +3,6 @@ PRODUCT_VERSION(18)
 
 #include <math.h>
 #include <LIDARLite.h>
-//#include <Servo.h>
 #include <SharpIR.h>
 
 #define model 20150
@@ -18,10 +17,11 @@ int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 
-SharpIR ir(D4, 20150);
+SharpIR ir(A1, 20150);
 LIDARLite lidar;
 char *distanceString5;
 char *distanceString6;
+char *distanceIR;
 
 
 bool initial;
@@ -29,22 +29,24 @@ int inital_distance5, inital_distance6;
 
 void setup()
 {
-  /*Serial.begin(9600);
-  Serial.println("What's up");*/
-
   wheels.attach(D2); // initialize wheel servo to Digital IO Pin #2
   esc.attach(D3); // initialize ESC to Digital IO Pin #3
-  /*  If you're re-uploading code via USB while leaving the ESC powered on,
-   *  you don't need to re-calibrate each time, and you can comment this part out.
-   */
 
   pinMode(D5, OUTPUT);
   pinMode(D6, OUTPUT);
+
+  wheels.write(180);
+  delay(1000);
+  wheels.write(0);
+  delay(1000);
+  wheels.write(90);
+  delay(1000);
 
   calibrateESC();
 
   distanceString5 = (char *)malloc(10 * sizeof(char));
   distanceString6 = (char *)malloc(10 * sizeof(char));
+  distanceIR = (char *)malloc(10 * sizeof(char));
 
   digitalWrite(D5, HIGH);
   digitalWrite(D6, LOW);
@@ -56,19 +58,12 @@ void setup()
   digitalWrite(D6, HIGH);
   delay(20);
   lidar.configure(0);
-  /*lidar.changeAddress(LIDARLITE_ADDR_SECOND, LIDARLITE_ADDR_DEFAULT);
-  lidar.configure(0, LIDARLITE_ADDR_SECOND);
-  delay(5);
-  digitalWrite(D6, HIGH);
-  delay(5);
-  lidar.configure(0);*/
-
-  //lidar.begin(0, true);
-  //lidar.configure(0);
 
   initial = true;
   wheels.write(90);
   esc.write(0);
+
+  Particle.function("Start", start);
 }
 
 /* Convert degree value to radians */
@@ -92,75 +87,85 @@ void calibrateESC(){
     esc.write(90); // reset the ESC to neutral (non-moving) value
 }
 
-/* Oscillate between various servo/ESC states, using a sine wave to gradually
- *  change speed and turn values.
- *
-void oscillate(){
-  for (int i =0; i < 360; i++){
-    double rad = degToRad(i);
-    double speedOffset = sin(rad) * maxSpeedOffset;
-    double wheelOffset = sin(rad) * maxWheelOffset;
-    esc.write(90 + speedOffset);
-    wheels.write(90 + wheelOffset);
-    delay(50);
+
+int go;
+
+int start(String command) {
+  if(command == "go") {
+    go = 1;
+    return 1;
+  }
+  else if(command == "no") {
+    go = 0;
+    return 0;
   }
 }
-*/
+double scale_deg, scale_rad, scale, error, totalDistance, actual_scale;
+double distance5, distance6;
+int wheel_write;
+bool direction;
 void loop()
 {
-  delay(1000);
+  if(go) {
+    delay(500);
 
-  if(initial) {
-    initial = false;
-    inital_distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
-    inital_distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
-  } else {
+    esc.write(75);
 
-    int distance5, distance6;
-    distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND);
-    itoa(distance5, distanceString5, 10);
-    Particle.publish("distance5", distanceString5);
+      distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
+      /*itoa(distance5, distanceString5, 10);
+      Particle.publish("distance5", distanceString5);*/
+      delay(10);
+
+      distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
+      /*itoa(distance6, distanceString6, 10);
+      Particle.publish("distance6", distanceString6);*/
+      delay(10);
+
+      //error = distance5 - distance6;
+      /*if(error >= 0){
+        direction = true; // Left
+      }
+      else{
+        direction = false; //Right
+      }*/
+
+
+      totalDistance = distance5 + distance6;
+
+      scale = distance6 * 360.00;
+
+      scale_deg = scale / totalDistance;
+
+      scale_rad = degToRad(scale_deg);
+
+      actual_scale = 90 * sin(scale_rad);
+
+      /*if(direction){
+        wheel_write = 90 - actual_scale;
+      }
+      else{
+        wheel_write = actual_scale + 90;
+      }*/
+      wheel_write = 90 + actual_scale;
+      /*itoa(wheel_write, distanceString6, 10);
+      Particle.publish("wheel", distanceString6);*/
+
+      wheels.write(wheel_write);
+
+      int dis = ir.distance();  // this returns the distance to the object you're measuring
+      /*itoa(dis, distanceIR, 10);
+      Particle.publish("dis", distanceIR);*/
+    if(dis < 20)
+    {
+      wheels.write(90);
+      esc.write(110); //slower backwards
+      delay(1000);
+      esc.write(90);
+      start("no");
+    }
     delay(10);
-
-    distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT);
-    itoa(distance6, distanceString6, 10);
-    Particle.publish("distance6", distanceString6);
-
-    if(distance5 < inital_distance5) {
-      wheels.write(45); // go left?
-    }
-    else {
-      wheels.write(90); // go right
-    }
   }
-
-  delay(10);
-  int dis = ir.distance();  // this returns the distance to the object you're measuring
-  itoa(dis, distanceIR, 10);
-  Particle.publish("dis", distanceIR);
-  if(dis < 25)
-  {
-    esc.write(90); //neutral
-    delay(5000);
+  else {
+    esc.write(90); //Stop wheels
   }
-  delay(10);
-
-  /*delay(10);
-  unsigned long pepe1=millis();  // takes the time before the loop on the library begins
-  int disIR = ir.distance();  // this returns the distance to the object you're measuring
-  //Serial.print("Mean distance: ");  // returns it to the serial monitor
-  //Serial.println(dis);
-
-  unsigned long pepe2=millis()-pepe1;  // the following gives you the time taken to get the measurement
-  //Serial.print("Time taken (ms): ");
-  //Serial.println(pepe2);
-
-
-  if(disIR < 50)
-  {
-    wheels.write(90);
-    esc.write(90); //neutral
-    delay(50000);
-  }*/
-
 }
