@@ -26,6 +26,9 @@ char *distanceIR;
 
 bool initial;
 int inital_distance5, inital_distance6;
+bool compare5; // TRUE=measure from distance5, FALSE= measure from distanceLeft
+int previousDistance; // stores the previous distance5 if compare5 is true
+// stores the previous distance6 if compare5 is false
 
 void setup()
 {
@@ -63,6 +66,9 @@ void setup()
   wheels.write(90);
   esc.write(0);
 
+  compare5 = FALSE; // we start comparing from distanceRight
+  previousDistance = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; // stores previousDistance5
+  delay(10);
   Particle.function("Start", start);
 }
 
@@ -107,9 +113,9 @@ bool direction;
 void loop()
 {
   if(go) {
-    delay(500);
+    delay(300);
 
-    esc.write(75);
+    esc.write(70);
 
       distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
       /*itoa(distance5, distanceString5, 10);
@@ -117,8 +123,26 @@ void loop()
       delay(10);
 
       distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
-      /*itoa(distance6, distanceString6, 10);
-      Particle.publish("distance6", distanceString6);*/
+
+      if(compare5) {
+        if(abs(distance5- previousDistance) > 50) {
+          compare5 = FALSE;
+          previousDistance = distance6;
+        }
+        else
+          previousDistance = distance5;
+      }
+      else {
+        if(abs(distance5- previousDistance) > 50) {
+          compare5 = TRUE;
+          previousDistance = distance5;
+        }
+        else
+          previousDistance = distance6;
+      }
+
+      itoa(distance6, distanceString6, 10);
+      Particle.publish("distance6", distanceString6);
       delay(10);
 
       //error = distance5 - distance6;
@@ -132,7 +156,10 @@ void loop()
 
       totalDistance = distance5 + distance6;
 
-      scale = distance6 * 360.00;
+      if(compare5)
+        scale = distance5 * 360.00;
+      else
+        scale = distance6 * 360.00;
 
       scale_deg = scale / totalDistance;
 

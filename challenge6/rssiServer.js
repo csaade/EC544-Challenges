@@ -1,7 +1,8 @@
 var SerialPort = require("serialport");
 var app = require('express')();
 var xbee_api = require('xbee-api');
-var csvWriter = require('csv-write-stream')
+var fs = require('fs');
+
 
 var C = xbee_api.constants;
 var XBeeAPI = new xbee_api.XBeeAPI({
@@ -10,17 +11,13 @@ var XBeeAPI = new xbee_api.XBeeAPI({
 
 var portName = process.argv[2];
 
-var writer = csvWriter();
 
 var sampleDelay = 3000;
 
 var countFrames = 0;
-var xbeeAddress = ["0013A20040A1A0C3", "0013A20040A1A12B", "0013A20040C8493D", "0013A20040A1A147"];\
-var line = [];
+var xbeeAddress = [/*"0013A20040A1A0C3",*/ "0013A20040A1A12B", "0013A20040C8493D", "0013A20040A1A147"];
+var stream;
 
-
-
-//Note that with the XBeeAPI parser, the serialport's "data" event will not fire when messages are received!
 portConfig = {
   baudRate: 9600,
   parser: XBeeAPI.rawParser()
@@ -29,6 +26,7 @@ portConfig = {
 var sp;
 sp = new SerialPort.SerialPort(portName, portConfig);
 
+/* Requests RSSI value from Xbee specified by address param */
 function requestRSSI(address){
 
   //Create a packet to be sent to all other XBEE units on the PAN.
@@ -45,37 +43,45 @@ function requestRSSI(address){
 
 }
 
-
+/* gets called whenever we connect to the server (only once) */
 sp.on("open", function () {
   console.log('open');
-    //Transmit all requests
-  for address in xbeeAddress
+  stream = fs.createWriteStream("./out.csv");
+
+  // generating the headers for csv
+
+  for(i=0; i<2; i++) {
+    stream.write("beacon"+(i+1).toString());
+    if(i != 1)
+      stream.write(",");
+  }
+  stream.write("\n");
+
+  // send requests to all xbees
+  for(address in xbeeAddress)
     requestRSSI(xbeeAddress[address]);
 });
 
-
+/* Gets called whenever we receive data from xbee */
 XBeeAPI.on("frame_object", function(frame) {
-  console.log(frame);
-  console.log();
 
   if (frame.type == 144){
-    line.push("Beacon ID: " + frame.data[1] + ", RSSI: " + (frame.data[0]));
+    stream.write(frame.data[0].toString());
     countFrames++;
-  }
 
-  if ( countFrames == 4){
-    countFrames = 0;
-
-  for lines in line
-    console.log(line[lines]);
-
-  //Transmit all requests
-    for address in xbeeAddress
-      requestRSSI(xbeeAddress[address]);
-
-  //Clear all RSSI data in memory
-  line = [];
+    // if we read from all xbees
+    if (countFrames == 2){
+      countFrames = 0;
+      stream.write("\n");
+      //Transmit all requests
+      for(address in xbeeAddress)
+        requestRSSI(xbeeAddress[address]);
   
+    }
+    // if we are still expecting data from xbees
+    else {
+      stream.write(",");
+    }
   }
 
 });
