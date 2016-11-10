@@ -35,7 +35,7 @@ var portName = process.argv[2];
 var sampleDelay = 3000;
 
 var countFrames = 0;
-var xbeeAddress = [/*"0013A20040A1A0C3",*/ "0013A20040A1A12B", "0013A20040C8493D", "0013A20040A1A147"];
+var xbeeAddress = ["0013A20040A1A12B", "0013A20040C8493D", "0013A20040ACFF00", "0013A20040A1A0C3"];
 var stream;
 
 portConfig = {
@@ -70,9 +70,9 @@ sp.on("open", function () {
 
   // generating the headers for csv
 
-  for(i=0; i<2; i++) {
+  for(i=0; i<4; i++) {
     stream.write("beacon"+(i+1).toString());
-    if(i != 1)
+    if(i != 3)
       stream.write(",");
   }
   stream.write("\n");
@@ -86,11 +86,13 @@ sp.on("open", function () {
 XBeeAPI.on("frame_object", function(frame) {
 
   if (frame.type == 144){
+    console.log('xbee' + frame.data[1].toString() + 'rssi' + frame.data[0].toString());
+
     stream.write(frame.data[0].toString());
     countFrames++;
 
     // if we read from all xbees
-    if (countFrames == 2){
+    if (countFrames == 4){
       countFrames = 0;
       stream.write("\n");
       //Transmit all requests

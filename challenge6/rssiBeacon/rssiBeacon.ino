@@ -30,7 +30,7 @@ This example is for Series 2 XBee
 */
 
 // Should be a unique ID between 0 and 255.
-uint8_t BEACON_ID = 1;
+uint8_t BEACON_ID = 3;
 
 
 XBee xbee = XBee();
