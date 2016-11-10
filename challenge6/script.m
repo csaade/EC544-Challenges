@@ -7,20 +7,31 @@
 
 %% CODE
 
-obj = tcpip('localhost',8080, 'InputBufferSize',8000,'NetworkRole','Client');
+M = csvread('output.csv',1,0);
+model = ClassificationKNN.fit(M(:,1:4),M(:,5));
+%location_label = predict(model, M(120,1:4));
+
+
 
 % Note: we constantly read data from connection
 while 1
-    
+    obj = tcpip('localhost',8080, 'InputBufferSize',8000,'NetworkRole','Client');
+
     % opening tcp connection
     fopen(obj)
     pause(2)
     
     % reading data
     while(obj.BytesAvailable)
-      data=fscanf(obj) 
+      data=fscanf(obj)
     end
-    fwrite(obj, 'successfully received data')
+    % parsing data
+    curr_state = eval(data);
+    
+    % getting prediction
+    location_label = predict(model, curr_state);
+    % sending prediction to server
+    fwrite(obj, num2str(location_label))
     fclose(obj)
     
 end

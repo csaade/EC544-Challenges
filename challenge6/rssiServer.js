@@ -3,14 +3,40 @@ var app = require('express')();
 var xbee_api = require('xbee-api');
 var fs = require('fs');
 
+
+var RSSI_values = [];
+
 /****** TCP/IP SERVER TO MATLAB *****/
 var net = require('net');
-net.createServer(function(socket) {
+net.createServer(connectListener).listen(8080);
+/***** SERVER ENDS HERE ******/
+
+
+/*** SERVER CONNECTION LISTENER *****/
+function connectListener(socket) {
   socket.name = socket.remoteAddress+ ":" + socket.remotePort;
 
-  socket.write("shutup dude \n"); // this is how we write data to it 
+  //socket.write("shutup dude \n"); // this is how we write data to it 
   //(eventually, we will be writing an array of RSS values)
+  if(RSSI_values.length == 4) {
+    var value_to_send = "[";
+    for(index in RSSI_values) {
+      value_to_send = value_to_send.concat(RSSI_values[index]);
+      console.log(index);
+      if(index != RSSI_values.length-1)
+        value_to_send = value_to_send.concat(",");
+    }
 
+    value_to_send = value_to_send.concat("]");
+    console.log('sending to matlab: ' + value_to_send);
+
+    socket.write(value_to_send);
+  
+    RSSI_values = [];
+    //Transmit all requests
+    for(address in xbeeAddress)
+        requestRSSI(xbeeAddress[address]);
+  }
   // adding 'data' event handler on socket
   socket.on('data', function(data) {
     console.log("Matlab sent: " + data.toString());
@@ -21,8 +47,7 @@ net.createServer(function(socket) {
     console.log("closed " + data.toString());
   });
 
-}).listen(8080);
-/***** SERVER ENDS HERE ******/
+}
 
 var C = xbee_api.constants;
 var XBeeAPI = new xbee_api.XBeeAPI({
@@ -33,8 +58,6 @@ var portName = process.argv[2];
 
 
 var sampleDelay = 3000;
-
-var countFrames = 0;
 var xbeeAddress = ["0013A20040A1A12B", "0013A20040C8493D", "0013A20040ACFF00", "0013A20040A1A0C3"];
 var stream;
 
@@ -86,19 +109,22 @@ sp.on("open", function () {
 XBeeAPI.on("frame_object", function(frame) {
 
   if (frame.type == 144){
-    console.log('xbee' + frame.data[1].toString() + 'rssi' + frame.data[0].toString());
+    //console.log('xbee' + frame.data[1].toString() + 'rssi' + frame.data[0].toString());
 
     stream.write(frame.data[0].toString());
-    countFrames++;
+    RSSI_values.push(frame.data[0].toString());
+    //console.log(frame.data[0].toString());
+    //countFrames++;
+
 
     // if we read from all xbees
-    if (countFrames == 4){
-      countFrames = 0;
+    if (RSSI_values.length == 4){
+      
       stream.write("\n");
-      //Transmit all requests
-      for(address in xbeeAddress)
-        requestRSSI(xbeeAddress[address]);
-  
+
+      for(index in RSSI_values) {
+        console.log(RSSI_values[index]);
+      }      
     }
     // if we are still expecting data from xbees
     else {
