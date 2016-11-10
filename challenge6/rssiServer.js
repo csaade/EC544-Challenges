@@ -40,6 +40,7 @@ function connectListener(socket) {
   // adding 'data' event handler on socket
   socket.on('data', function(data) {
     console.log("Matlab sent: " + data.toString());
+    io.emit('bin_number', data.toString());
   });
 
   // closing connection

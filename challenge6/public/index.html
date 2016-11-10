@@ -44,14 +44,21 @@
 
     	<script>
 
-    	//unhides the bin when you pass it the id which is 1 to 26
-    	function bins(id) {
-    		document.getElementById(id).style.visibility = "visible";
-    	}
-    	//Showing all the bins just for now. Take this out when getting data from the nod.js
-    	for(var i = 1; i <= 26; i++) {
-    		bins(i);
-    	}
+            var socket = io();
+        	//unhides the bin when you pass it the id which is 1 to 26
+        	function bins(id) {
+                //hides all of them again
+                for(var i = 1; i <= 26; i++) {
+                    document.getElementById(i).style.visibility = "hidden";
+                }
+                //shows the bin that is selected by knn
+        		document.getElementById(id).style.visibility = "visible";
+        	}
+
+            socket.on("msg", function(data) {
+                var bin_id = data;
+                bins(bin_id);
+            });
  
     	</script>
     </body>
