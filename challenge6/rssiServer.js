@@ -3,6 +3,26 @@ var app = require('express')();
 var xbee_api = require('xbee-api');
 var fs = require('fs');
 
+/****** TCP/IP SERVER TO MATLAB *****/
+var net = require('net');
+net.createServer(function(socket) {
+  socket.name = socket.remoteAddress+ ":" + socket.remotePort;
+
+  socket.write("shutup dude \n"); // this is how we write data to it 
+  //(eventually, we will be writing an array of RSS values)
+
+  // adding 'data' event handler on socket
+  socket.on('data', function(data) {
+    console.log("Matlab sent: " + data.toString());
+  });
+
+  // closing connection
+  socket.on('close', function(data) {
+    console.log("closed " + data.toString());
+  });
+
+}).listen(8080);
+/***** SERVER ENDS HERE ******/
 
 var C = xbee_api.constants;
 var XBeeAPI = new xbee_api.XBeeAPI({
@@ -43,7 +63,7 @@ function requestRSSI(address){
 
 }
 
-/* gets called whenever we connect to the server (only once) */
+/* gets called whenever we connect to the server which is the serial port(only once) */
 sp.on("open", function () {
   console.log('open');
   stream = fs.createWriteStream("./out.csv");
