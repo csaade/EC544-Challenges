@@ -2,6 +2,8 @@ var SerialPort = require("serialport");
 var app = require('express')();
 var xbee_api = require('xbee-api');
 var fs = require('fs');
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
 
 var RSSI_values = [];
