@@ -8,6 +8,9 @@ var io = require('socket.io')(http);
 var ml = require('machine_learning');
 
 var RSSI_values = [];
+var beacon1, beacon2, beacon3,beacon4 = [];
+var pollCount = 0; //for continuing the polling system
+//buffers for averaging in order to make data less jumpy
 
 /****** TCP/IP SERVER TO MATLAB *****/
 // var net = require('net');
@@ -102,6 +105,15 @@ function requestAllRSSI() {
     }
 }
 
+function averageRSSI(buffer){
+    var total = 0;
+    for(var i = 0; i < buffer.length; i++) {
+        total += buffer[i];
+    }
+    var avg = total / buffer.length;
+    RSSI_values.push(total); //save
+}
+    
 /* gets called whenever we connect to the server which is the serial port(only once) */
 sp.on("open", function () {
   console.log('open');
@@ -145,39 +157,65 @@ sp.on("open", function () {
 
 /* Gets called whenever we receive data from xbee */
 XBeeAPI.on("frame_object", function(frame) {
-
   if (frame.type == 144){
     //console.log('xbee' + frame.data[1].toString() + 'rssi' + frame.data[0].toString());
+      
+      if (beacon1.length == 4){
+          
+          averageRSSI(beacon1);
+          averageRSSI(beacon2);
+          averageRSSI(beacon3);
+          averageRSSI(beacon4);
+          
+          // stream.write("\n");
+          var bin = knn.predict({
+             x: RSSI_values,
+             k: 3
+          });
+                                
+          console.log(RSSI_values.toString() + ' bin: ' + bin);
+          bin = parseInt(bin);
+          io.emit('msg', bin.toString());
+          
+          RSSI_values, beacon1, beacon2, beacon3, beacon4 = [] //clear buffers
+      }
+      
+      
+      switch(frame.data[1]){
+          case "1":
+              beacon1.push(frame.data[0]);
+              pollCount++;
+              break;
+          case "2":
+              beacon2.push(frame.data[0]);
+              pollCount++;
+              break;
+          case "3": 
+              beacon3.push(frame.data[0]);
+              pollCount++;
+              break;
+          case "4":
+              beacon4.push(frame.data[0]);
+              pollCount++;
+              break;
+      };
 
     // stream.write(frame.data[0].toString());
-    RSSI_values.push(frame.data[0].toString());
     //console.log(frame.data[0].toString());
     //countFrames++;
     
-    // if we read from all xbees
-    if (RSSI_values.length == 4){
-
-      // stream.write("\n");
-      var bin = knn.predict({
-        x: RSSI_values,
-        k: 3
-      });
-
-      console.log(RSSI_values.toString() + ' bin: ' + bin);
-      bin = parseInt(bin);
-      io.emit('msg', bin.toString());
-
-      console.log(RSSI_values)
-      RSSI_values = [];
+    //For continued polling
+    if(pollCount == 4){
+      pollCount = 0;
       requestAllRSSI();
     }
     // if we are still expecting data from xbees
     // else {
     //   stream.write(",");
     // }
-  }
 
-});
+  }
+};
 
 // Listen on port
 app.use(express.static('public'));
