@@ -1,57 +1,41 @@
 #include <SoftwareSerial.h>
 
-#include <Printers.h>
-#include <XBee.h>
-
-#define ADDRESS_MAX_LENGTH 100
+#define MAX_RANDOM_NUM 50
 
 // global varialbes
 //char *address[]; // array of strings
-SoftwareSerial xbeeSerial(2,3);
-XBee xbee = XBee();
+SoftwareSerial xbSerial(2,3);
 
-uint8_t id = 3;
-XBeeResponse response = XBeeResponse();
-ZBRxResponse rx = ZBRxResponse();
+char id = 0;
+char received_id = 0;
+int time_counter = 0;
 
 void setup() {
+//  randomSeed(micros());
+//  id = '0' + random(1, MAX_RANDOM_NUM);
+//  id = '1';
+  id = 1;
+  
   // put your setup code here, to run once:
   Serial.begin(9600);
-  xbeeSerial.begin(9600);
-  xbee.setSerial(xbeeSerial);
+  xbSerial.begin(9600);
 }
-char ids;
+
 void loop() {
-  // put your main code here, to run repeatedly:
-/*
-  xbee.write(id);
-
-  xbee.send
-
-  while(xbee.available() > 0) {
-    ids = xbee.read();
-    Serial.println(ids);
-    
-  }
-delay(2000);
-  */
-  xbee.readPacket();
-  if(xbee.getResponse().isAvailable()) {
-    if(xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
-      xbee.getResponse().getZBRxResponse(rx);
-      XBeeAddress64 addr = rx.getRemoteAddress64();
-      Serial.print(addr.getMsb());
-      Serial.println(addr.getLsb());
-    }
+  while(xbSerial.available() > 0) {
+    received_id = xbSerial.read();
+    Serial.print("Received ID ");
+    Serial.println(received_id, DEC);
   }
 
-  XBeeAddress64 localAddr = xbee.getAddress();
-
-  delay(1000);
-
-  XBeeAddress64 sendAddr = XBeeAddress64(0x0, 0xFFFF);
-  uint8_t values[] = {id};
-  ZBTxRequest zbTx = ZBTxRequest(sendAddr, values, sizeof(values));
-  xbee.send(zbTx);
+  if(time_counter >= 50) { // 5 seconds
+    Serial.print("Sending my ID ");
+    Serial.println(id, DEC);
+    xbSerial.write(id);
+    time_counter = 0;
+  }
   
+  delay(100);
+  time_counter++;
 }
+
