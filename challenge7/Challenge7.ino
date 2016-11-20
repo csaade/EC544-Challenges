@@ -73,15 +73,20 @@ void loop() {
       
       switch(command) {
         case 'C':
-          if(infected)
+          if(infected) {
             infected = false;
+            Serial.println("I GOT CLEARED");
+          }
           break;
         case 'I':
-          if(!isLeader)
+          if(!isLeader) {
             infected = true;
+            Serial.println("I GOT INFECTED");
+          }
           break;
         default: // if we received an id
           received_id = command;
+          Serial.println("I Received an ID");
           if(!search_in_array(received_id)) {
             num_ids++;
             ids = (char*) realloc(ids,num_ids*sizeof(char));
@@ -97,7 +102,7 @@ void loop() {
     else
       isLeader = false;
   
-    command = id;
+    //command = id;
   //  if(isButtonPressed()) {
   //    if(isLeader)
   //      command = 'C';
@@ -105,7 +110,7 @@ void loop() {
   //      command = 'I';
   //  }
   
-    xbSerial.write(command);
+    //xbSerial.write(command);
   
   
   //  if(time_counter >= 50) { // 5 seconds
@@ -132,7 +137,7 @@ void loop() {
   }
 
   // Check for button
-
+  command = id;
   if(isButtonPressed()) {
     if(isLeader) {
       command = 'C';
@@ -142,8 +147,9 @@ void loop() {
       command = 'I';
       Serial.println("Sending infection");
     }
-    xbSerial.write(command);
   }
+
+  xbSerial.write(command);
   
 //  if(digitalRead(BUTTON) == LOW && !isLeader)
 //  {
@@ -217,7 +223,7 @@ bool isButtonPressed() {
     if(buttonRead != buttonState) {
       buttonState = buttonRead;
 
-      if(buttonState == HIGH) {
+      if(buttonState == LOW) {
         Serial.println("PRESSED");
         return true;
       }      
