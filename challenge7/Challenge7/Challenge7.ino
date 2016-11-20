@@ -35,6 +35,7 @@ void loop() {
     Serial.println("REFRESHH");
     num_ids = 0;
     ids = (char*) malloc(0);
+    delay(1000);
   }
   
   while(xbSerial.available() > 0) {
@@ -50,18 +51,17 @@ void loop() {
     
   }
 
-  if(time_counter >= 50) { // 5 seconds
+  //if(time_counter >= 50) { // 5 seconds
     //Serial.print("Sending my ID ");
     //Serial.println(id, DEC);
     xbSerial.write(id);
-    time_counter = 0;
 
     if(!search_in_array(id)) {
       num_ids++;
       ids = (char*) realloc(ids, num_ids*sizeof(char));
       ids[num_ids-1] = id;
     }
-  }
+  //}
 
   // printing the values inside the id array
   Serial.println("Stuff that are inside array");
@@ -70,6 +70,9 @@ void loop() {
   }
   
   time_counter++;
+  if(time_counter == 100) // to avoid overflow
+    time_counter = 1; // we reset the counter
+    
   delay(1000);
 }
 
