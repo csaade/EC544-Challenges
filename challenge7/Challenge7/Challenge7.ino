@@ -41,7 +41,11 @@ void setup() {
   digitalWrite(BLUE, LOW);
   digitalWrite(GREEN, LOW);
 
-  id = '3';
+//  pinMode(BUTTON, INPUT_PULLUP);
+
+//  attachInterrupt(digitalPinToInterrupt(BUTTON), isButtonPressed, RISING);
+
+  id = '4';
   infected = false;
 
   ids = (char*) malloc(sizeof(char));
@@ -73,20 +77,15 @@ void loop() {
       
       switch(command) {
         case 'C':
-          if(infected) {
+          if(infected)
             infected = false;
-            Serial.println("I GOT CLEARED");
-          }
           break;
         case 'I':
-          if(!isLeader) {
+          if(!isLeader)
             infected = true;
-            Serial.println("I GOT INFECTED");
-          }
           break;
         default: // if we received an id
           received_id = command;
-          Serial.println("I Received an ID");
           if(!search_in_array(received_id)) {
             num_ids++;
             ids = (char*) realloc(ids,num_ids*sizeof(char));
@@ -102,7 +101,7 @@ void loop() {
     else
       isLeader = false;
   
-    //command = id;
+    command = id;
   //  if(isButtonPressed()) {
   //    if(isLeader)
   //      command = 'C';
@@ -110,7 +109,7 @@ void loop() {
   //      command = 'I';
   //  }
   
-    //xbSerial.write(command);
+    xbSerial.write(command);
   
   
   //  if(time_counter >= 50) { // 5 seconds
@@ -137,33 +136,17 @@ void loop() {
   }
 
   // Check for button
-  command = id;
-  if(isButtonPressed()) {
-    if(isLeader) {
-      command = 'C';
-      Serial.println("Clearing infection");
-    }
-    else {
-      command = 'I';
-      Serial.println("Sending infection");
-    }
+  if(digitalRead(BUTTON) == LOW && !isLeader)
+  {
+    infected = true;
+    command = 'I';
+    xbSerial.write(command);
   }
-
-  xbSerial.write(command);
-  
-//  if(digitalRead(BUTTON) == LOW && !isLeader)
-//  {
-//    infected = true;
-//    Serial.println("Sending infection");
-//    command = 'I';
-//    xbSerial.write(command);
-//  }
-//  else if(digitalRead(BUTTON) == LOW && isLeader) {
-//    infected = false;
-//    command = 'C';
-//    Serial.println("Clearing infection");
-//    xbSerial.write(command);
-//  }
+  else if(digitalRead(BUTTON) == LOW && isLeader) {
+    infected = false;
+    command = 'C';
+    xbSerial.write(command);
+  }
 //  else {
 //    xbSerial.write(id);
 //  }
@@ -210,27 +193,33 @@ char findLeader() {
 }
 
 
-bool isButtonPressed() {
-  
-    int buttonRead = digitalRead(BUTTON);
-    //return;
-  //Serial.println("button handler");
+void isButtonPressed() {
+  Serial.println("ACTUAL PRESS");
 
-  if(buttonRead != lastButtonState)
-    lastDebounceTime = millis();
-
-   if((millis() - lastDebounceTime) > debounceDelay) {
-    if(buttonRead != buttonState) {
-      buttonState = buttonRead;
-
-      if(buttonState == LOW) {
-        Serial.println("PRESSED");
-        return true;
-      }      
-    }
-   }
-    
-    lastButtonState = buttonRead;
-    return false;
+  if(isLeader)
+    command = 'C';
+  else
+    command = 'I';
+//    int buttonRead = digitalRead(BUTTON);
+//    return;
+//  //Serial.println("button handler");
+//
+//  if(buttonRead != lastButtonState)
+//    lastDebounceTime = millis();
+//
+//   if((millis() - lastDebounceTime) > debounceDelay) {
+//    if(buttonRead != buttonState) {
+//      buttonState = buttonRead;
+//
+//      if(buttonState == HIGH) {
+//        Serial.println("PRESSED");
+//        //return true;
+//      }      
+//    }
+//   }
+//    
+//    lastButtonState = buttonRead;
+    //return false;
 }
+
 
