@@ -24,6 +24,9 @@ byte rx_byte;
 bool infected;
 bool should_clear;
 
+//Prevent immediate reinfection
+unsigned long timeSinceClear = 0;
+
 int tcount1 = 0, tcount2 = 0;
 
 void setup() {
@@ -63,42 +66,60 @@ void loop() {
     }
 
     if((rx_byte & INFECT) && leader != my_id)
-      infected = true;
+    {
+      if(millis() - timeSinceClear >= 3000 || timeSinceClear == 0)
+        infected = true;
+        }
       
-    if(rx_byte & CLEAR)
+    if(rx_byte == 0x21 || rx_byte == 0x22 || rx_byte == 0x23 || rx_byte == 0x24 ){
       infected = false;
+      timeSinceClear = millis();
+      Serial.println("Got a clear");
+      }
   }
+
+  if(tcount1 >= 200) { // every 3.5 seconds
+    byte tx_byte = 0;
+    if(should_clear)
+      {
+        Serial.println("I'm clearing");
+        tx_byte = CLEAR | my_id; // clear if i'm the leader
+        should_clear = false;
+        Serial.print("Sending byte: ");
+        Serial.println(tx_byte, HEX);
+        xbSerial.write(tx_byte);
+      }
+  }
+
   
   if(tcount1 >= 350) { // every 3.5 seconds
     byte tx_byte = 0;
     if(leader != my_id)
     {
-      if(infected)
+      if(infected){
         tx_byte = INFECT | my_id; // infect if i'm not the leader
-      else
+        Serial.print("Sending byte: ");
+        Serial.println(tx_byte, HEX);
+        xbSerial.write(tx_byte);}
+      else{
         tx_byte = my_id; // just regular id broadcast
+        Serial.print("Sending byte: ");
+        Serial.println(tx_byte, HEX);
+        xbSerial.write(tx_byte);}
     }
     else
     {
-      if(should_clear)
-      {
-        Serial.println("I'm clearing");
-        tx_byte = CLEAR | my_id; // clear if i'm the leader
-        should_clear = false;
-      }
-      else
         tx_byte = my_id; // just regular id broadcast
+        Serial.print("Sending byte: ");
+        Serial.println(tx_byte, HEX);
+        xbSerial.write(tx_byte);
     }
 
-    Serial.print("Sending byte: ");
-    Serial.println(tx_byte, HEX);
-    xbSerial.write(tx_byte);
     printArray();
-    
     tcount1 = 0;
   }
   
-  if(tcount2 >= 2000) { // every 20 seconds
+  if(tcount2 >= 700) { // every 20 seconds
     // Figure out leader
     int max_id = ids[0];
     int i;
@@ -120,18 +141,15 @@ void loop() {
     digitalWrite(RED, LOW);
     digitalWrite(GREEN, LOW);
   }
-  else
+  if(!infected)
   {
-    if(infected)
-    {
-      digitalWrite(RED, HIGH);
-      digitalWrite(GREEN, LOW);
-    }
-    else
-    {
-      digitalWrite(RED, LOW);
-      digitalWrite(GREEN, HIGH);
-    }
+    digitalWrite(RED, LOW);
+    digitalWrite(GREEN, HIGH);
+  }
+  if(infected)
+  {
+    digitalWrite(RED, HIGH);
+    digitalWrite(GREEN, LOW);
   }
 
   // button press
@@ -178,4 +196,3 @@ void printArray()
   }
   Serial.println("------------");
 }
-
