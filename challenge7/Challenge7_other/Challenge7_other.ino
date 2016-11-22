@@ -110,6 +110,7 @@ void loop() {
     else
     {
         tx_byte = my_id; // just regular id broadcast
+        infected = false;
         Serial.print("Sending byte: ");
         Serial.println(tx_byte, HEX);
         xbSerial.write(tx_byte);
@@ -141,13 +142,15 @@ void loop() {
     digitalWrite(RED, LOW);
     digitalWrite(GREEN, LOW);
   }
-  if(!infected)
+  if(!infected && leader != my_id)
   {
+    //digitalWrite(BLUE, LOW);
     digitalWrite(RED, LOW);
     digitalWrite(GREEN, HIGH);
   }
-  if(infected)
+  if(infected && leader != my_id)
   {
+    //digitalWrite(BLUE, LOW);
     digitalWrite(RED, HIGH);
     digitalWrite(GREEN, LOW);
   }
