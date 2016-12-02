@@ -56,6 +56,8 @@ var pollCount = 0; //for continuing the polling system
 
 // }
 
+var request_counter = 0;
+
 // Read output.csv into a 2d array
 var knn = null;
 var train_data = [];
@@ -70,7 +72,7 @@ var portName = process.argv[2];
 
 
 var sampleDelay = 3000;
-var xbeeAddress = ["0013A20040A1A12B", "0013A20040C8493D", "0013A20040ACFF00", "0013A20040A1A0C3"];
+var xbeeAddress = ["0013A20040ACFF00", "0013A20040A1A0C3", "0013A20040ACFF79", "0013A20040A1A12B"];
 var stream;
 
 portConfig = {
@@ -100,6 +102,7 @@ function requestRSSI(address){
 
 // Requests rssi's from all xbees
 function requestAllRSSI() {
+    request_counter++;
     for(address in xbeeAddress) {
         requestRSSI(xbeeAddress[address]);
     }
@@ -117,7 +120,7 @@ function averageRSSI(buffer){
 /* gets called whenever we connect to the server which is the serial port(only once) */
 sp.on("open", function () {
   console.log('open');
-  // stream = fs.createWriteStream("./out.csv");
+  stream = fs.createWriteStream("./out.csv");
 
   // generating the headers for csv
 
@@ -161,13 +164,21 @@ XBeeAPI.on("frame_object", function(frame) {
 
   if (frame.type == 144){
     //console.log('xbee' + frame.data[1].toString() + 'rssi' + frame.data[0].toString());
-          console.log(frame.data[1].toString() + " " + frame.data[0].toString());
-      if (beacon1.length == 4){
+      // console.log(frame.data[1].toString() + " " + frame.data[0].toString());
+      if(request_counter == 4){
+      // if (beacon1.length == 4){
+
+          beacon1 = padArray(beacon1, 4);
+          beacon2 = padArray(beacon2, 4);
+          beacon3 = padArray(beacon3, 4);
+          beacon4 = padArray(beacon4, 4);
           
           averageRSSI(beacon1);
           averageRSSI(beacon2);
           averageRSSI(beacon3);
           averageRSSI(beacon4);
+
+          printArrays();
           
           // stream.write("\n");
           var bin = knn.predict({
@@ -177,9 +188,16 @@ XBeeAPI.on("frame_object", function(frame) {
                                 
           console.log(RSSI_values.toString() + ' bin: ' + bin);
           bin = parseInt(bin);
-          io.emit('msg', bin.toString());
+          // io.emit('msg', bin.toString());
+
+          stream.write(RSSI_values[0].toString() + ',');
+          stream.write(RSSI_values[1].toString() + ',');
+          stream.write(RSSI_values[2].toString() + ',');
+          stream.write(RSSI_values[3].toString());
+          stream.write('\n');
           
           RSSI_values =[], beacon1 = [], beacon2 = [], beacon3 = [], beacon4 = [] ;//clear buffers
+          request_counter = 0;
       }
       
       
@@ -209,7 +227,8 @@ XBeeAPI.on("frame_object", function(frame) {
     //For continued polling
     if(pollCount == 4){
       pollCount = 0;
-      requestAllRSSI();
+      // requestAllRSSI();
+      setTimeout(requestAllRSSI, 1000);
     }
     // if we are still expecting data from xbees
     // else {
@@ -218,6 +237,26 @@ XBeeAPI.on("frame_object", function(frame) {
 
   }
 });
+
+function padArray(arr, len) {
+    if(arr.length == 0)
+        return;
+
+    if(arr.length < len) {
+        for(var i = arr.length - 1; i < len; i++) {
+            arr.push(arr[0]);
+        }
+    }
+
+    return arr;
+}
+
+function printArrays() {
+    console.log(beacon1);
+    console.log(beacon2);
+    console.log(beacon3);
+    console.log(beacon4);
+}
 
 // Listen on port
 app.use(express.static('public'));

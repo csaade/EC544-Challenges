@@ -5,7 +5,7 @@
 #                 writer.writerow(fields)
 
 output_file = open('output.csv', 'w')
-for i in range(1,15):
+for i in range(1,27):
     filename = 'out'+str(i)+'.csv'
     with open(filename) as lines:
         for line in lines:
