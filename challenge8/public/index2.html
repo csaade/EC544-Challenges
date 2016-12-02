@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Challenge 8 - Group 10</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+
+    </head>
+    <body>
+        <div>
+            <button type="button" class="btn btn-info" id="self" onclick="window.location.href='index.html'; socket.emit('state', 's')" style="margin:10px 10px 10px 10px;"">Self Driving Mode</button>
+        </div>
+    	<div>
+    	<h1 style="text-align: center; color: #FF69B4;">Remote Control Mode<h1>
+        
+    	<p>You can control the crawler now</p>
+    	</div>
+
+    	<script>
+
+         //    var socket = io();
+        	// //unhides the bin when you pass it the id which is 1 to 26
+        	// function bins(id) {
+         //        //hides all of them again
+         //        for(var i = 1; i <= 16; i++) {
+         //            document.getElementById(i).style.visibility = "visible";
+         //        }
+         //        //shows the bin that is selected by knn
+        	// 	document.getElementById(id).style.visibility = "visible";
+        	// }
+
+         //    socket.on("msg", function(data) {
+         //        var bin_id = data;
+         //        bins(bin_id);
+         //    });
+ 
+    	</script>
+    </body>
+    </html>
