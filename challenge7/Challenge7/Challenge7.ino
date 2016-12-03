@@ -45,7 +45,7 @@ void setup() {
 
 //  attachInterrupt(digitalPinToInterrupt(BUTTON), isButtonPressed, RISING);
 
-  id = '4';
+  id = '3';
   infected = false;
 
   ids = (char*) malloc(sizeof(char));
@@ -79,8 +79,10 @@ void loop() {
         case 'C':
           if(infected)
             infected = false;
+          Serial.println("Clear message");
           break;
         case 'I':
+          Serial.println("Infect message");
           if(!isLeader)
             infected = true;
           break;
