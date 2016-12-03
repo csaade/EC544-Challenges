@@ -1,9 +1,11 @@
-PRODUCT_ID(1783)
-PRODUCT_VERSION(18)
+//PRODUCT_ID(1783)
+//PRODUCT_VERSION(18)
 
 #include <math.h>
-#include <LIDARLite.h>
-#include <SharpIR.h>
+#include "LIDARLite.h"
+#include "SharpIR.h"
+#include "PID.h"
+#include <Servo.h>
 
 #define model 20150
 // ir: the pin where your sensor is attached
@@ -19,7 +21,7 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 double distance5, distance6;
 int wheel_write;
 bool initial;
-int go;
+int go = 1;
 int start(String command) {
   if(command == "go") {
     go = 1;
@@ -31,22 +33,25 @@ int start(String command) {
   }
 }
 
-SharpIR ir(A1, 20150);
+SharpIR ir(1, 25, 93, 20150);
 LIDARLite lidar;
 
 //Define Variables we'll be connecting to
 double Setpoint, Input, Output;
 
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint,2,1,2, DIRECT);
+PID myPID = PID(&Input, &Output, &Setpoint,2,1,2, DIRECT);
 
 void setup()
 {
-  wheels.attach(D2); // initialize wheel servo to Digital IO Pin #2
-  esc.attach(D3); // initialize ESC to Digital IO Pin #3
+  // For serial communication with raspberry pi
+  Serial.begin(9600);    // USB port
+  
+  wheels.attach(2); // initialize wheel servo to Digital IO Pin #2
+  esc.attach(3); // initialize ESC to Digital IO Pin #3
 
-  pinMode(D5, OUTPUT);
-  pinMode(D6, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
 
   wheels.write(180);
   delay(1000);
@@ -57,18 +62,14 @@ void setup()
 
   calibrateESC();
 
-  distanceString5 = (char *)malloc(10 * sizeof(char));
-  distanceString6 = (char *)malloc(10 * sizeof(char));
-  distanceIR = (char *)malloc(10 * sizeof(char));
-
-  digitalWrite(D5, HIGH);
-  digitalWrite(D6, LOW);
+  digitalWrite(5, HIGH);
+  digitalWrite(6, LOW);
   delay(20);
   lidar.begin(0, true);
   lidar.configure(0);
   lidar.changeAddress(LIDARLITE_ADDR_SECOND, true, LIDARLITE_ADDR_DEFAULT);
 
-  digitalWrite(D6, HIGH);
+  digitalWrite(6, HIGH);
   delay(20);
   lidar.configure(0);
 
@@ -82,8 +83,8 @@ void setup()
   distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
   Input = distance5 - distance6;  
   Setpoint = 0;
-  SetOutputLimits(0, 180); // Servo angles limits for output of PID to scale properly
-  myPID.SetMode(AUTOMATIC)
+  myPID.SetOutputLimits(0, 180); // Servo angles limits for output of PID to scale properly
+  myPID.SetMode(AUTOMATIC);
   
   delay(10);
 }
