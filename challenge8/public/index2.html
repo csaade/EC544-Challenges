@@ -75,8 +75,10 @@
                 html += "Backward + Left<br/>";
             }
 
-            message = "r:" + speed_send + "," + angle_send;
+            message = "r:" + angle_send + "," + speed_send;
             socket.emit("remote_msg", message);
+
+            console.log(message);
 
             html += "Hyp: " + hyp + "<br/>";
             html += "Angle: " + angle_deg + "<br/>";
