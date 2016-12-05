@@ -91,7 +91,7 @@ spArduino.on("open", function() {
   //   console.log('results' + results);
   // });
 });
-    
+
 /* gets called whenever we connect to the server which is the serial port(only once) */
 sp.on("open", function () {
   console.log('open Xbee serial');
@@ -107,7 +107,7 @@ sp.on("open", function () {
         var row_array = [];
         for(var col = 0; col < cols.length - 1; col++) // get the left 4 columns
             row_array.push(parseInt(cols[col]));
-        
+
         bins.push(cols[cols.length - 1]); // put the bin # in a different list
         train_data.push(row_array);
     }
@@ -135,20 +135,20 @@ XBeeAPI.on("frame_object", function(frame) {
           beacon2 = padArray(beacon2, 4);
           beacon3 = padArray(beacon3, 4);
           beacon4 = padArray(beacon4, 4);
-          
+
           averageRSSI(beacon1);
           averageRSSI(beacon2);
           averageRSSI(beacon3);
           averageRSSI(beacon4);
 
           printArrays();
-          
+
           // stream.write("\n");
           var bin = knn.predict({
              x: RSSI_values,
              k: 1
           });
-                                
+
 
           bin = parseInt(bin);
 
@@ -164,12 +164,12 @@ XBeeAPI.on("frame_object", function(frame) {
           stream.write(RSSI_values[2].toString() + ',');
           stream.write(RSSI_values[3].toString());
           stream.write('\n');
-          
+
           RSSI_values =[], beacon1 = [], beacon2 = [], beacon3 = [], beacon4 = [] ;//clear buffers
           request_counter = 0;
       }
-      
-      
+
+
       switch(frame.data[1]){
           case 1:
               beacon1.push(parseInt(frame.data[0]));
@@ -179,7 +179,7 @@ XBeeAPI.on("frame_object", function(frame) {
               beacon2.push(parseInt(frame.data[0]));
               pollCount++;
               break;
-          case 3: 
+          case 3:
               beacon3.push(parseInt(frame.data[0]));
               pollCount++;
               break;
@@ -192,7 +192,7 @@ XBeeAPI.on("frame_object", function(frame) {
     // stream.write(frame.data[0].toString());
     //console.log(frame.data[0].toString());
     //countFrames++;
-    
+
     //For continued polling
     if(pollCount == 4){
       pollCount = 0;
@@ -231,4 +231,12 @@ function printArrays() {
 app.use(express.static('public'));
 http.listen(3000, function(){
     console.log('listening on *:3000');
+});
+
+io.on('connection', function(socket) {
+    socket.on('remote_msg', function(msg) {
+        // Received a message to toggle an LED from the web page,
+        // now send the character to the xbee->arduino
+        spArduino.write(msg);
+    });
 });
