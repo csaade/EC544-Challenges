@@ -4,6 +4,7 @@
     <title>Challenge 8 - Group 10</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -12,32 +13,110 @@
     </head>
     <body>
         <div>
-            <button type="button" class="btn btn-info" id="self" onclick="window.location.href='index.html'; socket.emit('state', 's')" style="margin:10px 10px 10px 10px;"">Self Driving Mode</button>
+            <button type="button" class="btn btn-info" id="self" onclick="window.location.href='index.html'"" style="margin:10px 10px 10px 10px;"">Self Driving Mode</button>
         </div>
     	<div>
     	<h1 style="text-align: center; color: #FF69B4;">Remote Control Mode<h1>
-        
+
     	<p>You can control the crawler now</p>
     	</div>
 
+        <div id="gamepadPrompt"></div>
+        <div id="gamepadDisplay"></div>
+        <div id="values"></div>
+
     	<script>
 
-         //    var socket = io();
-        	// //unhides the bin when you pass it the id which is 1 to 26
-        	// function bins(id) {
-         //        //hides all of them again
-         //        for(var i = 1; i <= 16; i++) {
-         //            document.getElementById(i).style.visibility = "visible";
-         //        }
-         //        //shows the bin that is selected by knn
-        	// 	document.getElementById(id).style.visibility = "visible";
-        	// }
+        var socket = io();
+        var hasGP = false;
+        var repGP;
 
-         //    socket.on("msg", function(data) {
-         //        var bin_id = data;
-         //        bins(bin_id);
-         //    });
- 
+        function canGame() {
+            return "getGamepads" in navigator;
+        }
+
+        function reportOnGamepad() {
+            var gp = navigator.getGamepads()[0];
+            var html = "";
+            var angle_send;
+            var speed_send;
+            var message = ";"
+
+            html += "id: " + gp.id + "<br/>";
+
+            html += "Stick R: " + gp.axes[2] + ", " + gp.axes[3] + "<br/>";
+
+            var x_val = gp.axes[2];
+            var y_val = gp.axes[3] * -1;
+
+            var hyp = Math.sqrt(x_val * x_val + y_val * y_val);
+            var angle_rad = Math.asin(y_val/hyp);
+            var angle_deg = angle_rad * (180/Math.PI);
+
+            html += " Vertical State: ";
+            if(y_val > 0 && x_val > 0) { //going forward and right
+                angle_send = angle_deg;
+                speed_send = 90 - (90 * hyp);
+                html += "Forward + Right<br/>";
+            }
+            else if(y_val > 0 && x_val < 0) { //gpoing forward and left
+                angle_send = 180 - angle_deg;
+                speed_send = 90 - (90 * hyp);
+                html += "Forward + Left<br/>";
+            }
+            else if(y_val < 0 && x_val > 0) { //going backward and right
+                angle_send = angle_deg;
+                speed_send = 90 + (90 * hyp);
+                html += "Backward + Right<br/>";
+            }
+            else if(y_val < 0 && x_val < 0) { //going backward and left
+                angle_send = 180 - angle_deg;
+                speed_send = 90 + (90 * hyp);
+                html += "Backward + Left<br/>";
+            }
+
+            message = "r:" + speed_send + "," + angle_send;
+            socket.emit("remote_msg", message);
+
+            html += "Hyp: " + hyp + "<br/>";
+            html += "Angle: " + angle_deg + "<br/>";
+
+            $("#gamepadDisplay").html(html);
+        }
+
+        $(document).ready(function() {
+            if(canGame()) {
+
+                var prompt = "Press any button on the controller";
+                $("#gamepadPrompt").text(prompt);
+
+                $(window).on("gamepadconnected", function() {
+                    hasGP = true;
+                    $("#gamepadPrompt").html("Gamepad connected!!");
+                    repGP = window.setInterval(reportOnGamepad, 100);
+                });
+
+                $(window).on("gamepaddisconnected", function() {
+                    console.log("disconnection event");
+                    $("#gamepadPrompt").text(prompt);
+                     window.clearInterval(repGP);
+                });
+
+                var checkGP = window.setInterval(function() {
+                if(navigator.getGamepads()[0]) {
+                    if(!hasGP) $(window).trigger("gamepadconnected");
+                    window.clearInterval(checkGP);
+                }
+            }, 500);
+
+                //function checkGamepad() {
+
+               // }
+            }
+        });
+
+
+
     	</script>
     </body>
     </html>
