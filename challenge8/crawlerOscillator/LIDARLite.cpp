@@ -125,6 +125,51 @@ void LIDARLite::configure(int configuration, char lidarliteAddress)
   }
 } /* LIDARLite::configure */
 
+/*
+  Change address
+*/
+void LIDARLite::changeAddress(char newI2cAddress, bool disablePrimaryAddress, char currentLidarLiteAddress)
+{
+  // // Read the serial number of the lidar module
+  // byte serialNumber[2];
+  // read(0x96, 2, serialNumber, true, oldAddress);
+  //
+  // // Write the serial number to the module (allows you to set the I2C address)
+  // write(0x18, serialNumber[0], oldAddress);
+  // write(0x19, serialNumber[1], oldAddress);
+  //
+  // // Write the new I2c address and disable default address
+  // write(0x1A, newAddress, oldAddress);
+  // write(0x1E, 0x08, oldAddress);
+
+  //  Array to save the serial number
+  unsigned char serialNumber[2];
+  unsigned char newI2cAddressArray[1];
+
+  //  Read two bytes from 0x96 to get the serial number
+  read(0x96,2,serialNumber,false,currentLidarLiteAddress);
+  //  Write the low byte of the serial number to 0x18
+  write(0x18,serialNumber[0],currentLidarLiteAddress);
+  //  Write the high byte of the serial number of 0x19
+  write(0x19,serialNumber[1],currentLidarLiteAddress);
+  //  Write the new address to 0x1a
+  write(0x1a,newI2cAddress,currentLidarLiteAddress);
+
+
+  while(newI2cAddress != newI2cAddressArray[0]){
+    read(0x1a,1,newI2cAddressArray,false,currentLidarLiteAddress);
+  }
+  //Serial.print("WIN!");
+  //  Choose whether or not to use the default address of 0x62
+  if(disablePrimaryAddress){
+    write(0x1e,0x08,currentLidarLiteAddress);
+  }else{
+    write(0x1e,0x00,currentLidarLiteAddress);
+  }
+
+  //return newI2cAddress;
+}
+
 /*------------------------------------------------------------------------------
   Reset
 
