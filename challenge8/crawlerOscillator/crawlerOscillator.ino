@@ -112,7 +112,46 @@ void calibrateESC(){
 
 void loop()
 {
-  if(go) {
+  if(Serial.available() > 0) {
+    String command_from_js;// = (char*) malloc(sizeof(char)*15); //message no more than 15 characters
+    command_from_js = Serial.readString();
+    Serial.println("received command: " + command_from_js);
+
+    if(command_from_js[0] == 'r') { // remote control
+      bool readingWheelAngle = true; // we start by reading the wheel angle
+      
+      /* variables for wheels */
+      String wheel_angle_str;
+      /* variables for esc */
+      String esc_angle_str;
+      int size_esc_angle = 0;
+      
+      /*** PARSING COMMAND SET FROM NODE.JS ***/
+      for(int i=1; i<15; i++) {
+        if(command_from_js.charAt(i) != ',') {
+          if(readingWheelAngle) {
+            wheel_angle_str.concat(command_from_js.charAt(i));
+          }
+          else {
+             esc_angle_str.concat(command_from_js.charAt(i));
+          }
+        }
+        else {
+          readingWheelAngle = false;
+        }
+      }
+      /*** DONE PARSING ***/
+      /*** GETTING THE ANGLE VALUES ***/
+      int esc_val = esc_angle_str.toInt();
+      int wheel_val = wheel_angle_str.toInt();
+      esc.write(esc_val);
+      wheels.write(wheel_val);
+      
+    }
+    // command is automatic (only sending the bin number)
+    else {
+
+      if(go) {
       delay(300);
       esc.write(70);
       
@@ -142,4 +181,7 @@ void loop()
       else {
         esc.write(90); //Stop wheels
       }
+      
+    }
+  }
 }
