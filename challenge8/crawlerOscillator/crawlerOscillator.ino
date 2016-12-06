@@ -21,6 +21,8 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 double distance5, distance6;
 int wheel_write;
 bool initial;
+
+
 int go = 1;
 int start(String command) {
   if(command == "go") {
@@ -33,14 +35,14 @@ int start(String command) {
   }
 }
 
-SharpIR ir(1, 25, 93, 20150);
+SharpIR ir(A0, 20150);
 LIDARLite lidar;
 
 //Define Variables we'll be connecting to
 double Setpoint, Input, Output;
 
 //Specify the links and initial tuning parameters
-PID myPID = PID(&Input, &Output, &Setpoint,2,1,2, DIRECT);
+PID myPID = PID(&Input, &Output, &Setpoint,1,1,1, DIRECT);
 
 void setup()
 {
@@ -112,46 +114,7 @@ void calibrateESC(){
 
 void loop()
 {
-  if(Serial.available() > 0) {
-    String command_from_js;// = (char*) malloc(sizeof(char)*15); //message no more than 15 characters
-    command_from_js = Serial.readString();
-    Serial.println("received command: " + command_from_js);
-
-    if(command_from_js[0] == 'r') { // remote control
-      bool readingWheelAngle = true; // we start by reading the wheel angle
-      
-      /* variables for wheels */
-      String wheel_angle_str;
-      /* variables for esc */
-      String esc_angle_str;
-      int size_esc_angle = 0;
-      
-      /*** PARSING COMMAND SET FROM NODE.JS ***/
-      for(int i=1; i<15; i++) {
-        if(command_from_js.charAt(i) != ',') {
-          if(readingWheelAngle) {
-            wheel_angle_str.concat(command_from_js.charAt(i));
-          }
-          else {
-             esc_angle_str.concat(command_from_js.charAt(i));
-          }
-        }
-        else {
-          readingWheelAngle = false;
-        }
-      }
-      /*** DONE PARSING ***/
-      /*** GETTING THE ANGLE VALUES ***/
-      int esc_val = esc_angle_str.toInt();
-      int wheel_val = wheel_angle_str.toInt();
-      esc.write(esc_val);
-      wheels.write(wheel_val);
-      
-    }
-    // command is automatic (only sending the bin number)
-    else {
-
-      if(go) {
+  if(go) {
       delay(300);
       esc.write(70);
       
@@ -164,11 +127,15 @@ void loop()
      
       // COMPUTE PID AND WRITE TO SERVOS
       myPID.Compute();
+      Serial.println(Output);
       wheels.write(Output);
 
+      
       // IR collision detection
-      int dis = ir.distance();  // this returns the distance to the object you're measuring  
-      if(dis < 20)
+      int dis = ir.distance();  // this returns the distance to the object you're measuring 
+      Serial.println(dis); 
+      
+      if(dis < 35)
       {
         wheels.write(90);
         esc.write(110); //slower backwards
@@ -177,11 +144,9 @@ void loop()
         start("no");
       }
       delay(10);
+      
       }
       else {
         esc.write(90); //Stop wheels
       }
-      
-    }
-  }
 }
