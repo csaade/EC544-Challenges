@@ -36,6 +36,7 @@ int start(String command) {
 }
 
 SharpIR ir(A0, 20150);
+SharpIR ir2(A1, 20150);
 LIDARLite lidar;
 
 //Define Variables we'll be connecting to
@@ -140,6 +141,7 @@ void loop()
       
       // IR collision detection
       int dis = ir.distance();  // this returns the distance to the object you're measuring 
+      int dis2 = ir2.distance(); // for gap detection
       Serial.println(dis); 
       
       if(dis < 35)
