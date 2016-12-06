@@ -6,6 +6,17 @@ var http = require('http').Server(app);
 var express = require('express');
 var io = require('socket.io')(http);
 var ml = require('machine_learning');
+var path = require('path');
+
+var spawn = require('child_process').spawn;
+var proc;
+ 
+app.use('/', express.static(path.join(__dirname, 'stream')));
+ 
+ 
+app.get('/', function(req, res) {
+  res.sendFile(__dirname + '/index.html');
+});
 
 var RSSI_values = [];
 var beacon1 = [], beacon2 = [], beacon3 = [],beacon4 = [];
@@ -233,10 +244,44 @@ http.listen(3000, function(){
     console.log('listening on *:3000');
 });
 
+function stopStreaming() {
+  app.set('watchingFile', false);
+  if (proc) proc.kill();
+  fs.unwatchFile('./stream/image_stream.jpg');
+}
+ 
+function startStreaming(io) {
+ 
+  if (app.get('watchingFile')) {
+    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+    return;
+  }
+ 
+  var args = ["-w", "640", "-h", "480", "-o", "./stream/image_stream.jpg", "-t", "999999999", "-tl", "100"];
+  proc = spawn('raspistill', args);
+ 
+  console.log('Watching for changes...');
+ 
+  app.set('watchingFile', true);
+ 
+  fs.watchFile('./stream/image_stream.jpg', function(current, previous) {
+    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+  })
+}
+
 io.on('connection', function(socket) {
     socket.on('remote_msg', function(msg) {
         // Received a message to toggle an LED from the web page,
         // now send the character to the xbee->arduino
         spArduino.write(msg);
     });
+
+    socket.on('start-stream', function() {
+    startStreaming(io);
+  });
+
+    socket.on('disconnect', function() {
+      stopStreaming();
+    });
+
 });
