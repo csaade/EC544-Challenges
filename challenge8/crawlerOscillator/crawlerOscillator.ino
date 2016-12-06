@@ -42,7 +42,7 @@ LIDARLite lidar;
 double Setpoint, Input, Output;
 
 //Specify the links and initial tuning parameters
-PID myPID = PID(&Input, &Output, &Setpoint,1,1,1, DIRECT);
+PID myPID = PID(&Input, &Output, &Setpoint,2,.5,.5, DIRECT);
 
 void setup()
 {
@@ -83,8 +83,8 @@ void setup()
   distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
   delay(10);
   distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
-  Input = distance5 - distance6;  
-  Setpoint = 0;
+   Input = (distance5 + distance6) / 2.00;  
+  Setpoint = 80;
   myPID.SetOutputLimits(0, 180); // Servo angles limits for output of PID to scale properly
   myPID.SetMode(AUTOMATIC);
   
@@ -120,13 +120,20 @@ void loop()
       
       // Calculate input to PID control for straight navigation
       distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
+      Serial.print("Left LIDAR: ");
+      Serial.println(distance5);
       delay(10);
       distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
-      Input = distance5 - distance6;
+      Serial.print("Right LIDAR: ");
+      Serial.println(distance6);
+      Input = (distance5 + distance6) / 2.00;
+      Serial.print("Input: ");
+      Serial.println(Input);
       delay(10);
      
       // COMPUTE PID AND WRITE TO SERVOS
       myPID.Compute();
+      Serial.println("Output: ");
       Serial.println(Output);
       wheels.write(Output);
 
