@@ -1,0 +1,10 @@
+{
+    "name": "Streaming",
+    "main": "src/main.js",
+    "dependencies": {
+        "ws": "*"
+    },
+    "scripts": {
+        "start": "node src/main.js"
+    }
+}
