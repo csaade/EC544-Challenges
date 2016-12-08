@@ -132,50 +132,50 @@ void calibrateESC(){
 
 void loop()
 {
-//  if(Serial.available() > 0) {
-//    String command_from_js;
-//    command_from_js = Serial.readString();
-//    Serial.println("received command: " + command_from_js);
-//
-//    if(command_from_js[0] == 'r') { // remote control
-//      bool readingWheelAngle = true; // we start by reading the wheel angle
-//      
-//      /* variables for wheels */
-//      String wheel_angle_str;
-//      /* variables for esc */
-//      String esc_angle_str;
-//      int size_esc_angle = 0;
-//      
-//      /*** PARSING COMMAND SET FROM NODE.JS ***/
-//      for(int i=1; i<15; i++) {
-//        if(command_from_js.charAt(i) != ',') {
-//          if(readingWheelAngle) {
-//            wheel_angle_str.concat(command_from_js.charAt(i));
-//          }
-//          else {
-//             esc_angle_str.concat(command_from_js.charAt(i));
-//          }
-//        }
-//        else {
-//          readingWheelAngle = false;
-//        }
-//      }
-//      /*** DONE PARSING ***/
-//      /*** GETTING THE ANGLE VALUES ***/
-//      int esc_val = esc_angle_str.toInt();
-//      int wheel_val = wheel_angle_str.toInt();
-//      esc.write(esc_val);
-//      wheels.write(wheel_val);
-//      
-//    }
-//    // command is automatic (only sending the bin number)
-//    else {
-//      String bin_num_str;
-//      for(int i=1; i<15; i++) {
-//        if(isDigit(command_from_js.charAt(i)))
-//          bin_num_str.concat(command_from_js.charAt(i));
-//      }
-//      int bin_num = bin_num_str.toInt();
+  if(Serial.available() > 0) {
+    String command_from_js;
+    command_from_js = Serial.readString();
+    Serial.println("received command: " + command_from_js);
+
+    if(command_from_js[0] == 'r') { // remote control
+      bool readingWheelAngle = true; // we start by reading the wheel angle
+      
+      /* variables for wheels */
+      String wheel_angle_str;
+      /* variables for esc */
+      String esc_angle_str;
+      int size_esc_angle = 0;
+      
+      /*** PARSING COMMAND SET FROM NODE.JS ***/
+      for(int i=1; i<15; i++) {
+        if(command_from_js.charAt(i) != ',') {
+          if(readingWheelAngle) {
+            wheel_angle_str.concat(command_from_js.charAt(i));
+          }
+          else {
+             esc_angle_str.concat(command_from_js.charAt(i));
+          }
+        }
+        else {
+          readingWheelAngle = false;
+        }
+      }
+      /*** DONE PARSING ***/
+      /*** GETTING THE ANGLE VALUES ***/
+      int esc_val = esc_angle_str.toInt();
+      int wheel_val = wheel_angle_str.toInt();
+      esc.write(esc_val);
+      wheels.write(wheel_val);
+      
+    }
+    // command is automatic (only sending the bin number)
+    else {
+      String bin_num_str;
+      for(int i=1; i<15; i++) {
+        if(isDigit(command_from_js.charAt(i)))
+          bin_num_str.concat(command_from_js.charAt(i));
+      }
+      int bin_num = bin_num_str.toInt();
       if(go) {
 
         delay(350);
@@ -209,14 +209,24 @@ void loop()
           Serial.println(distance5);
         //Serial.println(dis2);
         
-        if((abs(dis2-prevDistanceIR) > 40) && PIDAppliedOnLIDAR == false){ // gab detected on the left
-          PIDAppliedOnLIDAR = true;
-          //Attempt at turning after gap detection
-          //leftTurn();
+        if((abs(dis2-prevDistanceIR) > 40) && !PIDAppliedOnLIDAR){ // gab detected on the left
+          if(!(bin_num == 1) && !(bin_num == 2) &&
+          !(bin_num == 15) && !(bin_num == 14) &&
+          !(bin_num == 5) && !(bin_num == 6) &&
+          !(bin_num == 10) && !(bin_num == 11)) {
+            PIDAppliedOnLIDAR = true;
+          }
+          //else
+            //Attempt at turning after gap detection
+            //leftTurn();
         }
-        else if((abs(distance5-prevDistanceLidar) > 40) && PIDAppliedOnLIDAR == true) { // gab detected on right
-          PIDAppliedOnLIDAR = false;
-         
+        else if((abs(distance5-prevDistanceLidar) > 40) && PIDAppliedOnLIDAR) { // gab detected on right
+          if(!(bin_num == 1) && !(bin_num == 2) &&
+          !(bin_num == 15) && !(bin_num == 14) &&
+          !(bin_num == 5) && !(bin_num == 6) &&
+          !(bin_num == 10) && !(bin_num == 11)) {
+            PIDAppliedOnLIDAR = false;
+          }         
         }
 
         
@@ -262,7 +272,7 @@ void loop()
       if(!go) {
         esc.write(90); //Stop wheels
       }
-//      
-//    }
-//  }
+      
+    }
+  }
 }
