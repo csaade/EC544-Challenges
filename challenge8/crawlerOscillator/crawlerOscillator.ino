@@ -229,6 +229,14 @@ void loop()
           }         
         }
 
+
+        // if bin 9 && lidar=true 
+                //switch to ir
+
+        //if bin 7 &&  ir=true 
+                //switch to lidar
+                
+
         
         if(PIDAppliedOnLIDAR) { // LIDAR PID
           Input = (distance5 + distance6) / 2.00; 
