@@ -21,8 +21,6 @@ double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 double distance5, distance6;
 int wheel_write;
 bool initial;
-
-
 int go = 1;
 int start(String command) {
   if(command == "go") {
@@ -43,7 +41,7 @@ LIDARLite lidar;
 double Setpoint, Input, Output;
 
 //Specify the links and initial tuning parameters
-PID myPID = PID(&Input, &Output, &Setpoint,2,.5,.5, DIRECT);
+PID myPID = PID(&Input, &Output, &Setpoint,2,0.5,0.5, DIRECT);
 
 void setup()
 {
@@ -115,47 +113,88 @@ void calibrateESC(){
 
 void loop()
 {
-  if(go) {
-      delay(300);
-      esc.write(70);
-      
-      // Calculate input to PID control for straight navigation
-      distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
-      Serial.print("Left LIDAR: ");
-      Serial.println(distance5);
-      delay(10);
-      distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
-      Serial.print("Right LIDAR: ");
-      Serial.println(distance6);
-      Input = (distance5 + distance6) / 2.00;
-      Serial.print("Input: ");
-      Serial.println(Input);
-      delay(10);
-     
-      // COMPUTE PID AND WRITE TO SERVOS
-      myPID.Compute();
-      Serial.println("Output: ");
-      Serial.println(Output);
-      wheels.write(Output);
+  if(Serial.available() > 0) {
+    String command_from_js;// = (char*) malloc(sizeof(char)*15); //message no more than 15 characters
+    command_from_js = Serial.readString();
+    Serial.println("received command: " + command_from_js);
 
+    if(command_from_js[0] == 'r') { // remote control
+      bool readingWheelAngle = true; // we start by reading the wheel angle
       
-      // IR collision detection
-      int dis = ir.distance();  // this returns the distance to the object you're measuring 
-      int dis2 = ir2.distance(); // for gap detection
-      Serial.println(dis); 
+      /* variables for wheels */
+      String wheel_angle_str;
+      /* variables for esc */
+      String esc_angle_str;
+      int size_esc_angle = 0;
       
-      if(dis < 35)
-      {
-        wheels.write(90);
-        esc.write(110); //slower backwards
-        delay(1000);
-        esc.write(90);
-        start("no");
+      /*** PARSING COMMAND SET FROM NODE.JS ***/
+      for(int i=1; i<15; i++) {
+        if(command_from_js.charAt(i) != ',') {
+          if(readingWheelAngle) {
+            wheel_angle_str.concat(command_from_js.charAt(i));
+          }
+          else {
+             esc_angle_str.concat(command_from_js.charAt(i));
+          }
+        }
+        else {
+          readingWheelAngle = false;
+        }
       }
-      delay(10);
+      /*** DONE PARSING ***/
+      /*** GETTING THE ANGLE VALUES ***/
+      int esc_val = esc_angle_str.toInt();
+      int wheel_val = wheel_angle_str.toInt();
+      esc.write(esc_val);
+      wheels.write(wheel_val);
       
+    }
+    // command is automatic (only sending the bin number)
+    else {
+
+      if(go) {
+        delay(300);
+        esc.write(70);
+        
+        // Calculate input to PID control for straight navigation
+        distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
+        Serial.print("Left LIDAR: ");
+        Serial.println(distance5);
+        delay(10);
+        distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
+        Serial.print("Right LIDAR: ");
+        Serial.println(distance6);
+        Input = (distance5 + distance6) / 2.00;
+        Serial.print("Input: ");
+        Serial.println(Input);
+        delay(10);
+       
+        // COMPUTE PID AND WRITE TO SERVOS
+        myPID.Compute();
+        Serial.println("Output: ");
+        Serial.println(Output);
+        wheels.write(Output);
+  
+        
+        // IR collision detection
+        int dis = ir.distance();  // this returns the distance to the object you're measuring 
+        int dis2 = ir2.distance(); // for gap detection
+        Serial.println(dis); 
+        
+        if(dis < 35)
+        {
+          wheels.write(90);
+          esc.write(110); //slower backwards
+          delay(1000);
+          esc.write(90);
+          start("no");
+        }
+        delay(10);
       }
       else {
         esc.write(90); //Stop wheels
       }
+      
+    }
+  }
 }
