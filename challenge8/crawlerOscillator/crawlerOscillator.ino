@@ -19,9 +19,18 @@ int startupDelay = 1000; // time to pause at each calibration step
 double maxSpeedOffset = 45; // maximum speed magnitude, in servo 'degrees'
 double maxWheelOffset = 85; // maximum wheel turn magnitude, in servo 'degrees'
 double distance5, distance6;
+double prevDistanceLidar;
+double prevDistanceIR;
+int dis2 = 0;
+int dis;
+
 int wheel_write;
 bool initial;
 int go = 1;
+
+bool PIDAppliedOnLIDAR = true;
+
+
 int start(String command) {
   if(command == "go") {
     go = 1;
@@ -78,13 +87,17 @@ void setup()
   wheels.write(90);
   esc.write(0);
 
+  dis2 = ir2.distance();
+  prevDistanceIR = dis2;
+  //////
+
+  
   //PID initalization
   distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
   delay(10);
   distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
-   Input = (distance5 + distance6) / 2.00;  
-  Setpoint = 80;
-  myPID.SetOutputLimits(0, 180); // Servo angles limits for output of PID to scale properly
+  prevDistanceLidar = (distance5+distance6)/2;
+  myPID.SetOutputLimits(-90, 90); // Servo angles limits for output of PID to scale properly
   myPID.SetMode(AUTOMATIC);
   
   delay(10);
@@ -113,54 +126,55 @@ void calibrateESC(){
 
 void loop()
 {
-  if(Serial.available() > 0) {
-    String command_from_js;
-    command_from_js = Serial.readString();
-    Serial.println("received command: " + command_from_js);
-
-    if(command_from_js[0] == 'r') { // remote control
-      bool readingWheelAngle = true; // we start by reading the wheel angle
-      
-      /* variables for wheels */
-      String wheel_angle_str;
-      /* variables for esc */
-      String esc_angle_str;
-      int size_esc_angle = 0;
-      
-      /*** PARSING COMMAND SET FROM NODE.JS ***/
-      for(int i=1; i<15; i++) {
-        if(command_from_js.charAt(i) != ',') {
-          if(readingWheelAngle) {
-            wheel_angle_str.concat(command_from_js.charAt(i));
-          }
-          else {
-             esc_angle_str.concat(command_from_js.charAt(i));
-          }
-        }
-        else {
-          readingWheelAngle = false;
-        }
-      }
-      /*** DONE PARSING ***/
-      /*** GETTING THE ANGLE VALUES ***/
-      int esc_val = esc_angle_str.toInt();
-      int wheel_val = wheel_angle_str.toInt();
-      esc.write(esc_val);
-      wheels.write(wheel_val);
-      
-    }
-    // command is automatic (only sending the bin number)
-    else {
-      String bin_num_str;
-      for(int i=1; i<15; i++) {
-        if(isDigit(command_from_js.charAt(i)))
-          bin_num_str.concat(command_from_js.charAt(i));
-      }
-      int bin_num = bin_num_str.toInt();
+//  if(Serial.available() > 0) {
+//    String command_from_js;
+//    command_from_js = Serial.readString();
+//    Serial.println("received command: " + command_from_js);
+//
+//    if(command_from_js[0] == 'r') { // remote control
+//      bool readingWheelAngle = true; // we start by reading the wheel angle
+//      
+//      /* variables for wheels */
+//      String wheel_angle_str;
+//      /* variables for esc */
+//      String esc_angle_str;
+//      int size_esc_angle = 0;
+//      
+//      /*** PARSING COMMAND SET FROM NODE.JS ***/
+//      for(int i=1; i<15; i++) {
+//        if(command_from_js.charAt(i) != ',') {
+//          if(readingWheelAngle) {
+//            wheel_angle_str.concat(command_from_js.charAt(i));
+//          }
+//          else {
+//             esc_angle_str.concat(command_from_js.charAt(i));
+//          }
+//        }
+//        else {
+//          readingWheelAngle = false;
+//        }
+//      }
+//      /*** DONE PARSING ***/
+//      /*** GETTING THE ANGLE VALUES ***/
+//      int esc_val = esc_angle_str.toInt();
+//      int wheel_val = wheel_angle_str.toInt();
+//      esc.write(esc_val);
+//      wheels.write(wheel_val);
+//      
+//    }
+//    // command is automatic (only sending the bin number)
+//    else {
+//      String bin_num_str;
+//      for(int i=1; i<15; i++) {
+//        if(isDigit(command_from_js.charAt(i)))
+//          bin_num_str.concat(command_from_js.charAt(i));
+//      }
+//      int bin_num = bin_num_str.toInt();
       if(go) {
+
         delay(300);
         esc.write(70);
-        
+
         // Calculate input to PID control for straight navigation
         distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
         Serial.print("Left LIDAR: ");
@@ -169,22 +183,50 @@ void loop()
         distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
         Serial.print("Right LIDAR: ");
         Serial.println(distance6);
-        Input = (distance5 + distance6) / 2.00;
-        Serial.print("Input: ");
-        Serial.println(Input);
-        delay(10);
-       
-        // COMPUTE PID AND WRITE TO SERVOS
+
+        dis2 = ir2.distance();
+
+        if(abs(dis2-prevDistanceIR) > 50) { // gab detected on the left
+          //if(bin5 || bin6 || bin7)
+            // turn left
+          // else // ignore the gab and switch PID
+          PIDAppliedOnLIDAR = true;
+          Serial.println("Using Lidar");
+        }
+        else if(abs(dis2-prevDistanceLidar) > 100) { // gab detected on right
+          PIDAppliedOnLIDAR = false;
+          Serial.println("Not Using Lidar");
+
+        }
+
+        
+        if(PIDAppliedOnLIDAR) { // LIDAR PID
+          Input = (distance5 + distance6) / 2.00; 
+          Setpoint = 110;
+          Serial.print("Input: ");
+          Serial.println(Input);
+        }
+        else { // IR PID
+          Input = dis2;
+          Setpoint = 50;
+          Serial.print("Input: ");
+          Serial.println(Input);
+          delay(10);
+        }
+        
+        //COMPUTE PID AND WRITE TO SERVOS
         myPID.Compute();
         Serial.println("Output: ");
         Serial.println(Output);
-        wheels.write(Output);
-  
+        
+        if(PIDAppliedOnLIDAR)
+          wheels.write(Output);
+         else
+          wheels.write(90-Output);  
         
         // IR collision detection
-        int dis = ir.distance();  // this returns the distance to the object you're measuring 
-        int dis2 = ir2.distance(); // for gap detection
-        Serial.println(dis); 
+        dis = ir.distance();  // this returns the distance to the object you're measuring 
+        dis2 = ir2.distance(); // for gap detection
         
         if(dis < 35)
         {
@@ -194,12 +236,15 @@ void loop()
           esc.write(90);
           start("no");
         }
+
+        prevDistanceLidar = (distance5+distance6)/2;
+        prevDistanceIR = dis2;
         delay(10);
       }
       else {
         esc.write(90); //Stop wheels
       }
-      
-    }
-  }
+//      
+//    }
+//  }
 }
