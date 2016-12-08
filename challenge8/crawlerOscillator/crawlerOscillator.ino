@@ -114,7 +114,7 @@ void calibrateESC(){
 void loop()
 {
   if(Serial.available() > 0) {
-    String command_from_js;// = (char*) malloc(sizeof(char)*15); //message no more than 15 characters
+    String command_from_js;
     command_from_js = Serial.readString();
     Serial.println("received command: " + command_from_js);
 
@@ -151,7 +151,12 @@ void loop()
     }
     // command is automatic (only sending the bin number)
     else {
-
+      String bin_num_str;
+      for(int i=1; i<15; i++) {
+        if(isDigit(command_from_js.charAt(i)))
+          bin_num_str.concat(command_from_js.charAt(i));
+      }
+      int bin_num = bin_num_str.toInt();
       if(go) {
         delay(300);
         esc.write(70);
