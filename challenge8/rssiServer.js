@@ -11,12 +11,6 @@ var path = require('path');
 var spawn = require('child_process').spawn;
 var proc;
  
-app.use('/', express.static(path.join(__dirname, 'stream')));
- 
- 
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/index.html');
-});
 
 var RSSI_values = [];
 var beacon1 = [], beacon2 = [], beacon3 = [],beacon4 = [];
@@ -35,23 +29,26 @@ var XBeeAPI = new xbee_api.XBeeAPI({
   api_mode: 2
 });
 
-var xbeePort = '/dev/ttyUSB0';//process.argv[2];
-var arduinoPort = '/dev/ttyACM0';
+var xbeePort = '/dev/cu.usbserial-A601D97W';//'/dev/ttyUSB0';//process.argv[2];
+var arduinoPort = '/dev/cu.usbmodem1421';//'/dev/ttyACM0';
 
 var sampleDelay = 3000;
 var xbeeAddress = ["0013A20040ACFF00", "0013A20040A1A0C3", "0013A20040ACFF79", "0013A20040A1A12B"];
 var stream;
 
-portConfig = {
+var portConfig = {
   baudRate: 9600,
   parser: XBeeAPI.rawParser()
 };
 
-var sp;
-sp = new SerialPort.SerialPort(xbeePort, portConfig);
-var spArduino = new SerialPort("/dev/ttyACM0", {
+var portArduinoConfig = {
   baudrate: 9600
-});
+};
+
+var sp;
+var spArduino;
+sp = new SerialPort.SerialPort(xbeePort, portConfig);
+spArduino = new SerialPort.SerialPort(arduinoPort, portArduinoConfig);
 
 /* Requests RSSI value from Xbee specified by address param */
 function requestRSSI(address){
@@ -73,7 +70,7 @@ function requestRSSI(address){
 // Requests rssi's from all xbees
 function requestAllRSSI() {
     request_counter++;
-    for(address in xbeeAddress) {
+    for(var address in xbeeAddress) {
         requestRSSI(xbeeAddress[address]);
     }
 }
@@ -88,20 +85,20 @@ function averageRSSI(buffer){
 }
 
 // Serial Communication with Arduino
-spArduino.on("open", function() {
+  spArduino.on("open", function() {
   console.log('open arduino serial');
 
-  // Dont need to read value from arduino
-  // spArduino.on('data', function(data) {
-  //   console.log('data received from arduino:' + data);
-  // });
+//   // Dont need to read value from arduino
+//   // spArduino.on('data', function(data) {
+//   //   console.log('data received from arduino:' + data);
+//   // });
 
-  // Writing to arduino
-  // spArduino.write(new Buffer('4', 'ascii'), function(err, results) {
-  //   console.log('err' + err);
-  //   console.log('results' + results);
-  // });
-});
+//   // Writing to arduino
+//   // spArduino.write(new Buffer('4', 'ascii'), function(err, results) {
+//   //   console.log('err' + err);
+//   //   console.log('results' + results);
+//   // });
+  });
 
 /* gets called whenever we connect to the server which is the serial port(only once) */
 sp.on("open", function () {
@@ -138,7 +135,7 @@ XBeeAPI.on("frame_object", function(frame) {
 
   if (frame.type == 144){
     //console.log('xbee' + frame.data[1].toString() + 'rssi' + frame.data[0].toString());
-      // console.log(frame.data[1].toString() + " " + frame.data[0].toString());
+      console.log(frame.data[1].toString() + " " + frame.data[0].toString());
       if(request_counter == 4){
       // if (beacon1.length == 4){
 
@@ -164,10 +161,12 @@ XBeeAPI.on("frame_object", function(frame) {
           bin = parseInt(bin);
 
           console.log(RSSI_values.toString() + ' bin: ' + bin.toString());
-          spArduino.write(new Buffer(bin, 'ascii'), function(err, results) {
-            console.log('err' + err);
-            console.log('results' + results);
-          });
+            spArduino.write("fucking bitch", function(err, results) {
+              results = bin.toString();
+              console.log('err ' + err);
+              console.log('results ' + results);
+            });
+
           // io.emit('msg', bin.toString());
 
           stream.write(RSSI_values[0].toString() + ',');
@@ -240,40 +239,12 @@ function printArrays() {
 
 // Listen on port
 app.use(express.static('public'));
-http.listen(3000, function(){
-    console.log('listening on *:3000');
-});
-
-function stopStreaming() {
-  app.set('watchingFile', false);
-  if (proc) proc.kill();
-  fs.unwatchFile('./stream/image_stream.jpg');
-}
- 
-function startStreaming(io) {
- 
-  if (app.get('watchingFile')) {
-    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
-    return;
-  }
- 
-  var args = ["-w", "640", "-h", "480", "-o", "./stream/image_stream.jpg", "-t", "999999999", "-tl", "100"];
-  proc = spawn('raspistill', args);
- 
-  console.log('Watching for changes...');
- 
-  app.set('watchingFile', true);
- 
-  fs.watchFile('./stream/image_stream.jpg', function(current, previous) {
-    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
-  })
-}
 
 io.on('connection', function(socket) {
     socket.on('remote_msg', function(msg) {
         // Received a message to toggle an LED from the web page,
         // now send the character to the xbee->arduino
-        spArduino.write(msg);
+        //spArduino.write(msg);
     });
 
     socket.on('start-stream', function() {
@@ -285,3 +256,33 @@ io.on('connection', function(socket) {
     });
 
 });
+
+http.listen(3000, function(){
+    console.log('listening on *:3000');
+});
+
+function stopStreaming() {
+  app.set('watchingFile', false);
+  if (proc) proc.kill();
+  fs.unwatchFile('./public/image_stream.jpg');
+}
+ 
+function startStreaming(io) {
+ 
+  if (app.get('watchingFile')) {
+    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+    return;
+  }
+ 
+  var args = ["-w", "640", "-h", "480", "-o", "./public/image_stream.jpg", "-t", "999999999", "-tl", "1"];
+  proc = spawn('raspistill', args);
+ 
+  console.log('Watching for changes...');
+ 
+  app.set('watchingFile', true);
+ 
+  fs.watchFile('./public/image_stream.jpg', function(current, previous) {
+    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
+  })
+}
+
