@@ -151,7 +151,7 @@ void loop()
     }
     // command is automatic (only sending the bin number)
     else {
-//
+
       if(go) {
         delay(300);
         esc.write(70);
