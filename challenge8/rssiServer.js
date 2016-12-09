@@ -8,8 +8,8 @@ var io = require('socket.io')(http);
 var ml = require('machine_learning');
 var path = require('path');
 
-var spawn = require('child_process').spawn;
-var proc;
+// var spawn = require('child_process').spawn;
+// var proc;
  
 
 var RSSI_values = [];
@@ -250,43 +250,4 @@ io.on('connection', function(socket) {
         spArduino.write(msg + "\n");
         console.log(msg);
     });
-
-    socket.on('start-stream', function() {
-    startStreaming(io);
-  });
-
-    socket.on('disconnect', function() {
-      stopStreaming();
-    });
-
 });
-
-http.listen(3000, function(){
-    console.log('listening on *:3000');
-});
-
-function stopStreaming() {
-  app.set('watchingFile', false);
-  if (proc) proc.kill();
-  fs.unwatchFile('./public/image_stream.jpg');
-}
- 
-function startStreaming(io) {
- 
-  if (app.get('watchingFile')) {
-    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
-    return;
-  }
- 
-  var args = ["-w", "640", "-h", "480", "-o", "./public/image_stream.jpg", "-t", "999999999", "-tl", "1"];
-  proc = spawn('raspistill', args);
- 
-  console.log('Watching for changes...');
- 
-  app.set('watchingFile', true);
- 
-  fs.watchFile('./public/image_stream.jpg', function(current, previous) {
-    io.emit('liveStream', 'image_stream.jpg?_t=' + (Math.random() * 100000));
-  })
-}
-
