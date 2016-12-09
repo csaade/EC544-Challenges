@@ -29,8 +29,11 @@ var XBeeAPI = new xbee_api.XBeeAPI({
   api_mode: 2
 });
 
-var xbeePort = '/dev/cu.usbserial-A601D97W';//'/dev/ttyUSB0';//process.argv[2];
-var arduinoPort = '/dev/cu.usbmodem1421';//'/dev/ttyACM0';
+//var xbeePort = '/dev/cu.usbserial-A601D97W';//'/dev/ttyUSB0';//process.argv[2];
+//var arduinoPort = '/dev/cu.usbmodem1421';//'/dev/ttyACM0';
+
+var xbeePort = '/dev/cu.usbserial-A601D97W';
+var arduinoPort = '/dev/cu.usbmodem411';
 
 var sampleDelay = 3000;
 var xbeeAddress = ["0013A20040ACFF00", "0013A20040A1A0C3", "0013A20040ACFF79", "0013A20040A1A12B"];
@@ -161,11 +164,11 @@ XBeeAPI.on("frame_object", function(frame) {
           bin = parseInt(bin);
 
           console.log(RSSI_values.toString() + ' bin: ' + bin.toString());
-            spArduino.write("fucking bitch", function(err, results) {
-              results = bin.toString();
-              console.log('err ' + err);
-              console.log('results ' + results);
-            });
+            // spArduino.write("a" + bin + "\n", function(err, results) {
+            //   results = bin.toString();
+            //   console.log('err ' + err);
+            //   console.log('results ' + results);
+            // });
 
           // io.emit('msg', bin.toString());
 
@@ -244,7 +247,8 @@ io.on('connection', function(socket) {
     socket.on('remote_msg', function(msg) {
         // Received a message to toggle an LED from the web page,
         // now send the character to the xbee->arduino
-        //spArduino.write(msg);
+        spArduino.write(msg + "\n");
+        console.log(msg);
     });
 
     socket.on('start-stream', function() {

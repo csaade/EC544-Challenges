@@ -260,8 +260,17 @@
                 html += "Backward + Left<br/>";
             }
 
-            message = "r:" + angle_send + "," + speed_send;
+            var int_angle = parseInt(angle_send, 10);
+            var int_speed = parseInt(speed_send, 10);
+
+            if(speed_send >= 80 && speed_send <= 100) {
+                int_speed= 90;
+            }
+
+            message = "r" + int_angle + "," + int_speed;
             socket.emit("remote_msg", message);
+
+
 
             console.log(message);
 
@@ -280,7 +289,7 @@
                 $(window).on("gamepadconnected", function() {
                     hasGP = true;
                     $("#gamepadPrompt").html("Gamepad connected!!");
-                    repGP = window.setInterval(reportOnGamepad, 100);
+                    repGP = window.setInterval(reportOnGamepad, 250);
                 });
 
                 $(window).on("gamepaddisconnected", function() {
@@ -294,7 +303,7 @@
                     if(!hasGP) $(window).trigger("gamepadconnected");
                     window.clearInterval(checkGP);
                 }
-            }, 500);
+            }, 1000);
             }
         });
 
