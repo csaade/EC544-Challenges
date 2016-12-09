@@ -4,38 +4,17 @@ var fs = require("fs");
 var express = require('express');
 var app = require('express')();
 var websocketPort = 9090,
-    webPort = 3000,
+    webPort = 8000,
     openBrowser = false,
     width = 640,
     inputString = "",
     height = 360;
 
-//Gathering Arguments
-// process.argv.forEach(function (val, index, array) {
-//     switch (val) {
-//     case "-open":
-//         openBrowser = true;
-//         break;
-//     case "-wsport":
-//         websocketPort = parseInt(array[index + 1]);
-//         break;
-//     case "-webport":
-//         webPort = parseInt(array[index + 1]);
-//         break;
-//     case "-res":
-//         var res = array[index + 1].split("x");
-//         width = parseInt(res[0]);
-//         height = parseInt(res[1]);
-//         break;
-//     case "-input":
-//         inputString = array[index + 1];
-//         console.log(inputString);
-//     }
-// });
-
 var wss = new WebSocketServer({
     port: websocketPort
 });
+
+//app.listen(3000);
 
 var clients = {};
 
