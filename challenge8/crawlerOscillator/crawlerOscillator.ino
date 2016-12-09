@@ -28,7 +28,9 @@ int wheel_write;
 bool initial;
 int go = 1;
 
-bool PIDAppliedOnLIDAR = true;
+bool PIDAppliedOnLIDAR = false;
+
+int countGaps = 0;
 
 
 int start(String command) {
@@ -50,13 +52,13 @@ LIDARLite lidar;
 double Setpoint, Input, Output;
 
 //Specify the links and initial tuning parameters
-PID myPID = PID(&Input, &Output, &Setpoint,2,0.5,0.5, DIRECT);
+PID myPID = PID(&Input, &Output, &Setpoint,2,1,1, DIRECT);
 
 void leftTurn(){
-  esc.write(70);
+  wheels.write(180);
   delay(10);
-  wheels.write(150);
-  delay(1000);
+  esc.write(60);
+  delay(1500);
 }
 void setup()
 {
@@ -132,64 +134,68 @@ void calibrateESC(){
 
 void loop()
 {
-  if(Serial.available() > 0) {
-    String command_from_js;
-    command_from_js = Serial.readString();
-    Serial.println("received command: " + command_from_js);
-
-    if(command_from_js[0] == 'r') { // remote control
-      bool readingWheelAngle = true; // we start by reading the wheel angle
-      
-      /* variables for wheels */
-      String wheel_angle_str;
-      /* variables for esc */
-      String esc_angle_str;
-      int size_esc_angle = 0;
-      
-      /*** PARSING COMMAND SET FROM NODE.JS ***/
-      for(int i=1; i<15; i++) {
-        if(command_from_js.charAt(i) != ',') {
-          if(readingWheelAngle) {
-            wheel_angle_str.concat(command_from_js.charAt(i));
-          }
-          else {
-             esc_angle_str.concat(command_from_js.charAt(i));
-          }
-        }
-        else {
-          readingWheelAngle = false;
-        }
-      }
-      /*** DONE PARSING ***/
-      /*** GETTING THE ANGLE VALUES ***/
-      int esc_val = esc_angle_str.toInt();
-      int wheel_val = wheel_angle_str.toInt();
-      esc.write(esc_val);
-      wheels.write(wheel_val);
-      
-    }
-    // command is automatic (only sending the bin number)
-    else {
-      String bin_num_str;
-      for(int i=1; i<15; i++) {
-        if(isDigit(command_from_js.charAt(i)))
-          bin_num_str.concat(command_from_js.charAt(i));
-      }
-      int bin_num = bin_num_str.toInt();
+ // if(Serial.available() > 0) {
+//    String command_from_js;
+//    command_from_js = Serial.readString();
+//    Serial.println("received command: " + command_from_js);
+//
+//    if(command_from_js[0] == 'r') { // remote control
+//      bool readingWheelAngle = true; // we start by reading the wheel angle
+//      
+//      /* variables for wheels */
+//      String wheel_angle_str;
+//      /* variables for esc */
+//      String esc_angle_str;
+//      int size_esc_angle = 0;
+//      
+//      /*** PARSING COMMAND SET FROM NODE.JS ***/
+//      for(int i=1; i<15; i++) {
+//        if(command_from_js.charAt(i) != ',') {
+//          if(readingWheelAngle) {
+//            wheel_angle_str.concat(command_from_js.charAt(i));
+//          }
+//          else {
+//             esc_angle_str.concat(command_from_js.charAt(i));
+//          }
+//        }
+//        else {
+//          readingWheelAngle = false;
+//        }
+//      }
+//      /*** DONE PARSING ***/
+//      /*** GETTING THE ANGLE VALUES ***/
+//      int esc_val = esc_angle_str.toInt();
+//      int wheel_val = wheel_angle_str.toInt();
+//      esc.write(esc_val);
+//      wheels.write(wheel_val);
+//      
+//    }
+//    // command is automatic (only sending the bin number)
+//    else {
+//      String bin_num_str;
+//      for(int i=1; i<15; i++) {
+//        if(isDigit(command_from_js.charAt(i)))
+//          bin_num_str.concat(command_from_js.charAt(i));
+//      }
+//      int bin_num = bin_num_str.toInt();
       if(go) {
+        delay(100);
+        esc.write(70);
+        // IR collision detection
+        dis = ir.distance();  // this returns the distance to the object you're measuring 
+        delay(10);
 
-        delay(350);
-        esc.write(80);
+
         // Calculate input to PID control for straight navigation
         distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
         delay(10);
         distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
         delay(10);
+
         dis2 = ir2.distance();
         delay(10);
-        // IR collision detection
-        dis = ir.distance();  // this returns the distance to the object you're measuring 
-        delay(10);
+
+         
        
         //Print for debugging
         //Serial.print("LIDAR 1: ");
@@ -209,27 +215,46 @@ void loop()
           Serial.println(distance5);
         //Serial.println(dis2);
         
-        if((abs(dis2-prevDistanceIR) > 40) && !PIDAppliedOnLIDAR){ // gab detected on the left
-          if(!(bin_num == 1) && !(bin_num == 2) &&
-          !(bin_num == 15) && !(bin_num == 14) &&
-          !(bin_num == 5) && !(bin_num == 6) &&
-          !(bin_num == 10) && !(bin_num == 11)) {
-            PIDAppliedOnLIDAR = true;
-          }
+        if((abs(dis2-prevDistanceIR) > 30) && !PIDAppliedOnLIDAR){ // gab detected on the left
+            countGaps++;
+            if(countGaps == 1) {
+              PIDAppliedOnLIDAR = true;
+              leftTurn();
+            }
+            else if(countGaps == 2) {
+              PIDAppliedOnLIDAR = true;
+              leftTurn(); 
+            }
+            else if(countGaps == 3) {
+              PIDAppliedOnLIDAR = true;
+              leftTurn();
+            }
+            else if(countGaps == 4) {
+              PIDAppliedOnLIDAR = false;
+              leftTurn();
+              countGaps = 0;
+            }
           //else
             //Attempt at turning after gap detection
             //leftTurn();
         }
         else if((abs(distance5-prevDistanceLidar) > 40) && PIDAppliedOnLIDAR) { // gab detected on right
-          if(!(bin_num == 1) && !(bin_num == 2) &&
-          !(bin_num == 15) && !(bin_num == 14) &&
-          !(bin_num == 5) && !(bin_num == 6) &&
-          !(bin_num == 10) && !(bin_num == 11)) {
-            PIDAppliedOnLIDAR = false;
-          }         
+            countGaps++;
+            if(countGaps == 1) {
+              PIDAppliedOnLIDAR = false;
+            }
+            else if(countGaps == 2) {
+              PIDAppliedOnLIDAR = true;
+              leftTurn();
+            }
+            else if(countGaps == 3) {
+              PIDAppliedOnLIDAR = false;
+              leftTurn();
+            }
+            //PIDAppliedOnLIDAR = false;
         }
 
-
+        Serial.println(countGaps);
         // if bin 9 && lidar=true 
                 //switch to ir
 
@@ -242,11 +267,13 @@ void loop()
           Input = (distance5 + distance6) / 2.00; 
           Setpoint = 90;
           delay(10);
+          
         }
         else { // IR PID
           Input = dis2;
-          Setpoint = 70;
+          Setpoint = 60;
           delay(10);
+          
         }
         
         //COMPUTE PID AND WRITE TO SERVOS
@@ -269,18 +296,19 @@ void loop()
           wheels.write(90);
           esc.write(110); //slower backwards
           delay(1000);
-          esc.write(90);
-          start("no");
+          //esc.write(90);
+          //start("no");
         }
 
+        
         prevDistanceLidar = distance5;
-        prevDistanceIR = dis2;
+        prevDistanceIR = dis2;  
         delay(10);
       }
       if(!go) {
         esc.write(90); //Stop wheels
       }
       
-    }
-  }
+    //}
+  //}
 }
