@@ -54,12 +54,73 @@ double Setpoint, Input, Output;
 //Specify the links and initial tuning parameters
 PID myPID = PID(&Input, &Output, &Setpoint,2,1,1, DIRECT);
 
-void leftTurn(){
+bool remoteControlling = false;
+
+void leftTurn1(){
+//  wheels.write(90);
+//  esc.write(125);
+//  delay(
   wheels.write(180);
   delay(10);
   esc.write(60);
+  delay(1000);
+  esc.write(90);
+  delay(25);
+  wheels.write(0);
+  delay(10);
+  esc.write(120);
+  delay(1000);
+  esc.write(90);
+  delay(25);
+  wheels.write(140);
+  delay(10);
+  esc.write(60);
   delay(1500);
+
+  //FIX POSITION
+  wheels.write(70);
+  delay(10);
+  esc.write(60);
+  delay(1000);
+  
+  wheels.write(90);
+  delay(10);
+  esc.write(90);
+  delay(1000);
 }
+
+void leftTurn(){
+//  wheels.write(90);
+//  esc.write(125);
+//  delay(
+  esc.write(90);
+  delay(100);
+  esc.write(40);
+  delay(10);
+  wheels.write(180);
+  delay(10);
+
+  delay(2000);
+  esc.write(90);
+  delay(25);
+
+//  wheels.write(0);
+//  delay(10);
+//  esc.write(120);
+//  delay(1000);
+//  esc.write(90);
+//  delay(25);
+//  wheels.write(180);
+//  delay(10);
+//  esc.write(60);
+//  delay(1500);
+//  wheels.write(90);
+//  delay(10);
+//  esc.write(90);
+//  delay(1000);
+}
+
+
 void setup()
 {
   // For serial communication with raspberry pi
@@ -135,6 +196,7 @@ void calibrateESC(){
 String rx_data;
 void loop()
 {
+  // get line
   while(Serial.available() > 0)
   {
     char rx_byte = Serial.read();
@@ -145,6 +207,7 @@ void loop()
     {
       ////// string finished /////
       if(rx_data[0] == 'r') { // remote control
+        remoteControlling = true;
         bool readingWheelAngle = true; // we start by reading the wheel angle
         
         /* variables for wheels */
@@ -176,9 +239,194 @@ void loop()
         esc.write(esc_val);
         wheels.write(wheel_val);
       }
+      else if(rx_data[0] == 'a')
+      {
+        remoteControlling = false;
+      }
       
       //Serial.print(rx_data);
       rx_data = "";
+    }
+  }
+  
+  if(!remoteControlling)
+  {
+    if(go) {
+      
+      esc.write(60);
+      // IR collision detection
+      dis = ir.distance();  // this returns the distance to the object you're measuring 
+      delay(10);
+
+
+      // Calculate input to PID control for straight navigation
+      distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
+      delay(10);
+      distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
+      delay(10);
+
+      dis2 = ir2.distance();
+      delay(10);
+
+      if(countGaps == 1){
+        PIDAppliedOnLIDAR = true;
+      }
+      else if (countGaps == 2){
+        PIDAppliedOnLIDAR = false;
+      }
+      else if (countGaps == 3){
+        PIDAppliedOnLIDAR = false;
+      }
+      else{
+        PIDAppliedOnLIDAR = false;
+      }
+       
+     
+      //Print for debugging
+      //Serial.print("LIDAR 1: ");
+    
+      //Serial.print("LIDAR 2: ");
+      //Serial.println(distance6);
+      //Serial.println("LEFT IR: ");
+      //Serial.println(dis2);
+      //Serial.println("FRONT IR: ");
+      //Serial.println(dis);
+
+      //if(PIDAppliedOnLIDAR)
+        //Serial.println("USING LIDAR");
+      // else
+        //Serial.println("USING IR");
+
+        //Serial.println(distance5);
+      //Serial.println(dis2);
+      
+      if(((dis2-prevDistanceIR) > 35) && !PIDAppliedOnLIDAR){ // gab detected on the left
+          countGaps++;
+          if(countGaps == 1) {
+            //PIDAppliedOnLIDAR = true;
+            leftTurn();
+          }
+          else if(countGaps == 2) {
+            //PIDAppliedOnLIDAR = false;
+            leftTurn(); 
+          }
+          else if(countGaps == 3) {
+            //PIDAppliedOnLIDAR = true;
+            //leftTurn();
+          
+            
+            delay(100);
+               wheels.write(180);
+               delay(10);
+            esc.write(40);
+            delay(10);
+          
+            delay(1250);
+            esc.write(90);
+            delay(25);
+
+             wheels.write(0);
+            esc.write(120);
+            delay(1500);
+            esc.write(90);
+
+              delay(100);
+               wheels.write(180);
+               delay(10);
+            esc.write(40);  
+            delay(1250);
+            wheels.write(0);
+            delay(10);
+            esc.write(50);
+            delay(1500);
+            esc.write(90);
+            delay(10);
+            wheels.write(90);
+            delay(10);
+            
+            
+          }
+          else if(countGaps == 4) {
+            //PIDAppliedOnLIDAR = false;
+            leftTurn();
+            countGaps = 0;
+          }
+      }
+      else if(((distance5-prevDistanceLidar) > 40) && PIDAppliedOnLIDAR) { // gab detected on right
+          countGaps++;
+          if(countGaps == 1) {
+            //PIDAppliedOnLIDAR = false;
+          }
+          else if(countGaps == 2) {
+            //PIDAppliedOnLIDAR = true;
+            leftTurn();
+          }
+          else if(countGaps == 3) {
+            //PIDAppliedOnLIDAR = false;
+            leftTurn();
+          }
+          else if(countGaps == 4) {
+            //PIDAppliedOnLIDAR = false;
+            leftTurn();
+            countGaps = 0;
+          }
+          //PIDAppliedOnLIDAR = false;
+      }
+
+      //Serial.println(countGaps);
+      // if bin 9 && lidar=true 
+              //switch to ir
+
+      //if bin 7 &&  ir=true 
+              //switch to lidar
+              
+
+      
+      if(PIDAppliedOnLIDAR) { // LIDAR PID
+        Input = (distance5 + distance6) / 2.00; 
+        Setpoint = 90;
+        delay(10);
+        
+      }
+      else { // IR PID
+        Input = dis2;
+        Setpoint = 60;
+        delay(10);
+        
+      }
+      
+      //COMPUTE PID AND WRITE TO SERVOS
+      myPID.Compute();
+
+      //Serial.print("Input: ");
+      //Serial.println(Input);
+      //Serial.println("Output: ");
+
+      if(PIDAppliedOnLIDAR){
+        wheels.write(90 + Output);  
+        //Serial.println(90 + Output);
+        }
+      else if(!PIDAppliedOnLIDAR){
+        wheels.write(90 - Output);
+        //Serial.println(90 - Output);
+      }
+      
+      if(dis < 35)
+      {
+        wheels.write(90);
+        esc.write(110); //slower backwards
+        delay(1000);
+        esc.write(90);
+        //start("no");
+      }
+
+      
+      prevDistanceLidar = distance5;
+      prevDistanceIR = dis2;  
+      delay(10);
+    }
+    if(!go) {
+      esc.write(90); //Stop wheels
     }
   }
   
@@ -196,136 +444,6 @@ void loop()
 //          bin_num_str.concat(command_from_js.charAt(i));
 //      }
 //      int bin_num = bin_num_str.toInt();
-//      if(go) {
-//        delay(100);
-//        esc.write(70);
-//        // IR collision detection
-//        dis = ir.distance();  // this returns the distance to the object you're measuring 
-//        delay(10);
-//
-//
-//        // Calculate input to PID control for straight navigation
-//        distance5 = lidar.distance(true, LIDARLITE_ADDR_SECOND)*1.00; //Left
-//        delay(10);
-//        distance6 = lidar.distance(true, LIDARLITE_ADDR_DEFAULT)*1.00; //Right
-//        delay(10);
-//
-//        dis2 = ir2.distance();
-//        delay(10);
-//
-//         
-//       
-//        //Print for debugging
-//        //Serial.print("LIDAR 1: ");
-//      
-//        //Serial.print("LIDAR 2: ");
-//        //Serial.println(distance6);
-//        //Serial.println("LEFT IR: ");
-//        //Serial.println(dis2);
-//        //Serial.println("FRONT IR: ");
-//        //Serial.println(dis);
-//
-//        if(PIDAppliedOnLIDAR)
-//          Serial.println("USING LIDAR");
-//         else
-//          Serial.println("USING IR");
-//
-//          Serial.println(distance5);
-//        //Serial.println(dis2);
-//        
-//        if((abs(dis2-prevDistanceIR) > 30) && !PIDAppliedOnLIDAR){ // gab detected on the left
-//            countGaps++;
-//            if(countGaps == 1) {
-//              PIDAppliedOnLIDAR = true;
-//              leftTurn();
-//            }
-//            else if(countGaps == 2) {
-//              PIDAppliedOnLIDAR = true;
-//              leftTurn(); 
-//            }
-//            else if(countGaps == 3) {
-//              PIDAppliedOnLIDAR = true;
-//              leftTurn();
-//            }
-//            else if(countGaps == 4) {
-//              PIDAppliedOnLIDAR = false;
-//              leftTurn();
-//              countGaps = 0;
-//            }
-//          //else
-//            //Attempt at turning after gap detection
-//            //leftTurn();
-//        }
-//        else if((abs(distance5-prevDistanceLidar) > 40) && PIDAppliedOnLIDAR) { // gab detected on right
-//            countGaps++;
-//            if(countGaps == 1) {
-//              PIDAppliedOnLIDAR = false;
-//            }
-//            else if(countGaps == 2) {
-//              PIDAppliedOnLIDAR = true;
-//              leftTurn();
-//            }
-//            else if(countGaps == 3) {
-//              PIDAppliedOnLIDAR = false;
-//              leftTurn();
-//            }
-//            //PIDAppliedOnLIDAR = false;
-//        }
-//
-//        Serial.println(countGaps);
-//        // if bin 9 && lidar=true 
-//                //switch to ir
-//
-//        //if bin 7 &&  ir=true 
-//                //switch to lidar
-//                
-//
-//        
-//        if(PIDAppliedOnLIDAR) { // LIDAR PID
-//          Input = (distance5 + distance6) / 2.00; 
-//          Setpoint = 90;
-//          delay(10);
-//          
-//        }
-//        else { // IR PID
-//          Input = dis2;
-//          Setpoint = 60;
-//          delay(10);
-//          
-//        }
-//        
-//        //COMPUTE PID AND WRITE TO SERVOS
-//        myPID.Compute();
-//
-//        //Serial.print("Input: ");
-//        //Serial.println(Input);
-//        //Serial.println("Output: ");
-//
-//        if(PIDAppliedOnLIDAR){
-//          wheels.write(90 + Output);  
-//          Serial.println(90 + Output);}
-//        else if(!PIDAppliedOnLIDAR){
-//          wheels.write(90 - Output);
-//          Serial.println(90 - Output);
-//        }
-//        
-//        if(dis < 35)
-//        {
-//          wheels.write(90);
-//          esc.write(110); //slower backwards
-//          delay(1000);
-//          //esc.write(90);
-//          //start("no");
-//        }
-//
-//        
-//        prevDistanceLidar = distance5;
-//        prevDistanceIR = dis2;  
-//        delay(10);
-//      }
-//      if(!go) {
-//        esc.write(90); //Stop wheels
-//      }
       
     //}
   //}
